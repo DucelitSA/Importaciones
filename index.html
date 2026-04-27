@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Importaciones · DUCELIT S.A.</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F1EC;--surf:#FFFFFF;--surf2:#EDEAE4;--surf3:#E4E0D8;
+  --brd:#D0CCC4;--brd2:#B4AFA8;
+  --tx:#1C1A16;--tx2:#5A5650;--tx3:#9A9690;
+  --gr:#1A6040;--gr-l:#E0EFE8;--gr-m:#3A8A60;--gr-b:#0E4A30;
+  --am:#8A4E08;--am-l:#FAF0DF;--am-m:#C4820A;
+  --rd:#7A2808;--rd-l:#FAE8E0;--rd-m:#B84020;
+  --bl:#1A3E6A;--bl-l:#E0EAF4;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'IBM Plex Sans',sans-serif;
+  --r:8px;--rs:5px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);font-size:14px;line-height:1.55;min-height:100vh;}
+
+/* ── LAYOUT SHELL ── */
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:260px;min-width:260px;background:var(--surf);border-right:1px solid var(--brd);display:flex;flex-direction:column;overflow:hidden;}
+.sb-header{padding:16px;border-bottom:1px solid var(--brd);}
+.sb-header h2{font-size:13px;font-weight:600;color:var(--tx);}
+.sb-header p{font-size:11px;color:var(--tx3);margin-top:2px;}
+.sb-actions{padding:10px 12px;border-bottom:1px solid var(--brd);}
+.btn-new{width:100%;padding:8px 12px;background:var(--gr);color:#fff;border:none;border-radius:var(--rs);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-new:hover{background:var(--gr-b);}
+.sb-search{padding:8px 12px;border-bottom:1px solid var(--brd);}
+.sb-search input{width:100%;padding:6px 9px;border:1px solid var(--brd);border-radius:var(--rs);font-family:var(--sans);font-size:12px;background:var(--surf2);color:var(--tx);outline:none;}
+.sb-search input:focus{border-color:var(--gr);background:var(--surf);}
+.sb-list{flex:1;overflow-y:auto;padding:8px 0;}
+.sb-group{margin-bottom:4px;}
+.sb-group-hd{padding:6px 14px 3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--tx3);}
+.sb-item{padding:9px 14px;cursor:pointer;border-left:3px solid transparent;transition:all .12s;display:flex;align-items:flex-start;justify-content:space-between;gap:6px;}
+.sb-item:hover{background:var(--surf2);}
+.sb-item.active{background:var(--gr-l);border-left-color:var(--gr);}
+.sb-item-l{flex:1;min-width:0;}
+.sb-item-name{font-size:13px;font-weight:500;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-item-meta{font-size:10px;color:var(--tx3);margin-top:1px;}
+.sb-item-total{font-family:var(--mono);font-size:11px;color:var(--gr-m);white-space:nowrap;}
+.sb-item-del{opacity:0;font-size:14px;color:var(--tx3);padding:0 2px;cursor:pointer;flex-shrink:0;}
+.sb-item:hover .sb-item-del{opacity:1;}
+.sb-empty{padding:24px 14px;text-align:center;font-size:12px;color:var(--tx3);}
+
+/* ── MAIN CONTENT ── */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+.main-inner{padding:2rem 2rem 4rem;max-width:1000px;width:100%;}
+
+/* ── WELCOME ── */
+.welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:3rem;text-align:center;}
+.welcome h3{font-size:18px;font-weight:500;color:var(--tx2);margin-bottom:8px;}
+.welcome p{font-size:13px;color:var(--tx3);max-width:360px;line-height:1.7;}
+
+/* ── TOP BAR ── */
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:1.5rem;flex-wrap:wrap;}
+.topbar-l{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;}
+.topbar-l input.title-inp{font-family:var(--sans);font-size:18px;font-weight:600;border:none;background:transparent;color:var(--tx);outline:none;width:100%;letter-spacing:-.2px;}
+.topbar-l input.title-inp:focus{border-bottom:2px solid var(--gr);}
+.code-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;font-weight:500;background:var(--gr);color:#fff;padding:3px 10px;border-radius:3px;letter-spacing:.04em;width:fit-content;}
+.code-badge .cb-lbl{font-size:9px;opacity:.75;font-weight:400;}
+.topbar-r{display:flex;gap:8px;flex-shrink:0;}
+.btn-sm{padding:7px 14px;border-radius:var(--rs);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;transition:all .12s;}
+.btn-ghost{background:transparent;border:1px solid var(--brd);color:var(--tx2);}
+.btn-ghost:hover{background:var(--surf2);border-color:var(--brd2);}
+.btn-primary{background:var(--tx);border:1px solid var(--tx);color:#fff;}
+.btn-primary:hover{background:#3A3530;}
+.btn-danger{background:transparent;border:1px solid var(--rd-m);color:var(--rd-m);}
+.btn-danger:hover{background:var(--rd-l);}
+
+/* ── META ROW ── */
+.meta-row{display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap;}
+.meta-field{display:flex;flex-direction:column;gap:3px;}
+.meta-field label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);}
+.meta-field input,.meta-field select{padding:6px 9px;border:1px solid var(--brd);border-radius:var(--rs);font-family:var(--sans);font-size:12px;background:var(--surf);color:var(--tx);outline:none;}
+.meta-field input:focus,.meta-field select:focus{border-color:var(--gr);}
+.meta-field.wide input{min-width:160px;}
+.meta-tag{display:inline-flex;align-items:center;padding:4px 10px;border-radius:var(--rs);font-size:11px;font-weight:500;gap:5px;}
+.meta-tag.green{background:var(--gr-l);color:var(--gr);}
+.meta-tag.amber{background:var(--am-l);color:var(--am);}
+
+/* ── SECTION ── */
+.sec{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:1rem;overflow:hidden;}
+.sec-hd{padding:11px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:8px;}
+.sec-hd .lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--tx2);}
+.sec-hd .hint{margin-left:auto;font-size:11px;color:var(--tx3);font-weight:400;text-transform:none;letter-spacing:0;}
+.pip{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.pip-g{background:var(--gr);}
+.pip-a{background:var(--am-m);}
+.pip-r{background:var(--rd-m);}
+.sec-bd{padding:16px;}
+
+/* ── PRODUCTS TABLE ── */
+.pt{width:100%;border-collapse:collapse;font-size:12px;}
+.pt thead th{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);padding:0 6px 8px 0;text-align:left;white-space:nowrap;}
+.pt thead th:last-child{padding-right:0;}
+.pt tbody tr{border-top:1px solid var(--brd);}
+.pt tbody tr:first-child{border-top:none;}
+.pt tbody td{padding:7px 6px 7px 0;vertical-align:middle;}
+.pt tbody td:last-child{padding-right:0;}
+.pt input[type=text],.pt input[type=number],.pt select{
+  width:100%;padding:5px 7px;border:1px solid var(--brd);border-radius:var(--rs);
+  font-family:var(--mono);font-size:11px;background:var(--bg);color:var(--tx);outline:none;
+}
+.pt input[type=text]:focus,.pt input[type=number]:focus,.pt select:focus{border-color:var(--gr);background:var(--surf);}
+.pt select{font-family:var(--sans);}
+.ncm-sel{min-width:190px;}
+.aec-show{font-family:var(--mono);font-size:12px;font-weight:500;padding:4px 8px;border-radius:3px;text-align:center;white-space:nowrap;}
+.aec-0{background:var(--gr-l);color:var(--gr);}
+.aec-12{background:var(--surf2);color:var(--tx2);}
+.aec-14{background:var(--am-l);color:var(--am);}
+.aec-18{background:var(--rd-l);color:var(--rd);}
+.del-btn{border:none;background:transparent;color:var(--tx3);cursor:pointer;font-size:16px;padding:2px 4px;line-height:1;}
+.del-btn:hover{color:var(--rd-m);}
+.add-prod-btn{margin-top:10px;padding:6px 14px;border:1px dashed var(--brd2);border-radius:var(--rs);background:transparent;font-family:var(--sans);font-size:12px;color:var(--tx2);cursor:pointer;}
+.add-prod-btn:hover{background:var(--surf2);}
+
+/* ── PARAMS GRID ── */
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.pg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;}
+.pf{display:flex;flex-direction:column;gap:3px;}
+.pf label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);}
+.pf input,.pf select{padding:7px 9px;border:1px solid var(--brd);border-radius:var(--rs);font-family:var(--mono);font-size:12px;background:var(--bg);color:var(--tx);outline:none;width:100%;}
+.pf input:focus,.pf select:focus{border-color:var(--gr);background:var(--surf);}
+.pf .hint{font-size:10px;color:var(--tx3);margin-top:2px;}
+.pf .hint.ok{color:var(--gr-m);}
+
+/* toggles */
+.trow{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--brd);}
+.trow:last-child{border-bottom:none;}
+.trow-nm{font-size:13px;}
+.trow-ht{font-size:11px;color:var(--tx3);}
+.pill{display:inline-block;font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:3px;margin-left:4px;vertical-align:middle;}
+.pill-g{background:var(--gr-l);color:var(--gr);}
+.pill-a{background:var(--am-l);color:var(--am);}
+.sw{position:relative;width:34px;height:20px;flex-shrink:0;margin-left:12px;}
+.sw input{opacity:0;width:0;height:0;}
+.sw-t{position:absolute;inset:0;border-radius:20px;background:var(--brd2);cursor:pointer;transition:background .15s;}
+.sw input:checked+.sw-t{background:var(--gr);}
+.sw-t:before{content:'';position:absolute;width:14px;height:14px;top:3px;left:3px;background:#fff;border-radius:50%;transition:transform .15s;}
+.sw input:checked+.sw-t:before{transform:translateX(14px);}
+
+/* logistica grid */
+.lg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.lg-item{border:1px solid var(--brd);border-radius:var(--rs);padding:10px;display:flex;flex-direction:column;gap:6px;}
+.lg-top{display:flex;align-items:center;justify-content:space-between;}
+.lg-nm{font-size:12px;font-weight:500;}
+.lg-inp{display:flex;align-items:center;gap:5px;}
+.lg-inp span{font-size:10px;color:var(--tx3);white-space:nowrap;}
+.lg-inp input{max-width:72px;padding:4px 7px;border:1px solid var(--brd);border-radius:var(--rs);font-family:var(--mono);font-size:11px;background:var(--bg);outline:none;}
+.lg-inp input:focus{border-color:var(--gr);}
+
+/* CALC BTN */
+.calc-btn{width:100%;padding:13px;background:var(--gr);color:#fff;border:none;border-radius:var(--r);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;letter-spacing:-.2px;}
+.calc-btn:hover{background:var(--gr-b);}
+.calc-btn:active{transform:scale(.99);}
+
+/* RESULTS */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--brd);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;margin-bottom:1px;}
+.stat-grid-2{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--brd);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;margin-bottom:14px;margin-top:1px;}
+.stat{background:var(--surf);padding:14px 16px;}
+.stat.s-accent{background:var(--surf2);}
+.s-l{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:3px;}
+.s-v{font-family:var(--mono);font-size:16px;font-weight:500;letter-spacing:-.4px;}
+.s-s{font-size:10px;color:var(--tx3);margin-top:2px;}
+.sv-g{color:var(--gr);}.sv-a{color:var(--am-m);}.sv-r{color:var(--rd-m);}.sv-b{color:var(--bl);}
+.sec-divider{display:flex;align-items:center;gap:10px;margin:14px 0 6px;}
+.sec-divider span{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;white-space:nowrap;padding:3px 10px;border-radius:3px;}
+.sec-divider span.sd-iva{background:var(--rd-l);color:var(--rd-m);}
+.sec-divider span.sd-desp{background:var(--am-l);color:var(--am-m);}
+.sec-divider span.sd-total{background:var(--gr-l);color:var(--gr);}
+.sec-divider hr{flex:1;border:none;border-top:1px solid var(--brd);}
+.two-panel{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.panel-box{border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;}
+.panel-box-hd{padding:9px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:7px;}
+.panel-box-hd .ph-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;}
+.panel-box-hd .ph-total{margin-left:auto;font-family:var(--mono);font-size:13px;font-weight:500;}
+.panel-box-bd{padding:10px 14px;}
+.pbl{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--brd);font-size:12px;}
+.pbl:last-child{border-bottom:none;}
+.pbl-nm{color:var(--tx2);}
+.pbl-v{font-family:var(--mono);font-weight:500;}
+.pbl-rec{font-size:9px;color:var(--gr-m);margin-left:4px;}
+.total-final{background:var(--gr);border-radius:var(--r);padding:14px 18px;display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;}
+.tf-label{font-size:12px;font-weight:600;color:rgba(255,255,255,.8);}
+.tf-usd{font-family:var(--mono);font-size:22px;font-weight:500;color:#fff;letter-spacing:-.5px;}
+.tf-pesos{font-size:11px;color:rgba(255,255,255,.7);}
+@media(max-width:700px){.two-panel{grid-template-columns:1fr;} .stat-grid,.stat-grid-2{grid-template-columns:1fr 1fr;}}
+
+.cbar{display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px;margin-bottom:6px;}
+.cbar div{transition:width .4s;}
+.cleg{display:flex;gap:12px;flex-wrap:wrap;}
+.cleg span{font-size:10px;color:var(--tx3);display:flex;align-items:center;gap:4px;}
+.cleg .dl{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+
+/* prod cards */
+.pcards{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px;margin-bottom:2px;}
+.pcard{background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:10px;}
+.pc-nm{font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pc-cif{font-family:var(--mono);font-size:12px;font-weight:500;}
+.pc-aec{font-size:10px;color:var(--am-m);margin-top:1px;}
+.pc-aran{font-family:var(--mono);font-size:11px;color:var(--gr-m);margin-top:1px;}
+
+/* br table */
+.brt{width:100%;border-collapse:collapse;font-size:12px;margin-top:14px;}
+.brt th{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);padding:3px 0 7px;text-align:left;}
+.brt th:not(:first-child){text-align:right;}
+.brt td{padding:6px 0;border-top:1px solid var(--brd);vertical-align:middle;}
+.brt td:not(:first-child){text-align:right;font-family:var(--mono);}
+.brt tr.grp td{background:var(--surf2);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--tx3);padding:4px 8px;border-top:2px solid var(--brd);}
+.brt tr.tot td{font-weight:700;font-size:13px;border-top:2px solid var(--tx);padding-top:10px;}
+.brt tr.tot td:not(:first-child){color:var(--gr);}
+.rec{font-size:9px;color:var(--gr-m);margin-left:4px;}
+.muted{color:var(--tx3);}
+
+/* info boxes */
+.ibox{border-radius:var(--rs);padding:10px 14px;font-size:11px;line-height:1.6;margin-top:10px;}
+.ibox.warn{background:var(--am-l);border:1px solid #E8C070;color:var(--am);}
+.ibox.ok{background:var(--gr-l);border:1px solid #90C8A8;color:var(--gr);}
+.ibox.gray{background:var(--surf2);border:1px solid var(--brd);color:var(--tx2);}
+.ibox strong{font-weight:600;}
+
+.cmp{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:9px 14px;background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);margin-top:10px;}
+.cmp-l{font-size:11px;color:var(--tx2);}
+.cmp-v{font-family:var(--mono);font-size:13px;font-weight:500;}
+.pos{color:var(--am-m);}.neg{color:var(--gr);}
+
+hr.s{border:none;border-top:1px solid var(--brd);margin:12px 0;}
+
+/* Responsive */
+@media(max-width:900px){
+  .sidebar{width:200px;min-width:200px;}
+  .pcards{grid-template-columns:1fr 1fr 1fr;}
+  .stat-grid{grid-template-columns:1fr 1fr;}
+  .lg-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:640px){
+  .app{flex-direction:column;}
+  .sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid var(--brd);}
+  .sb-list{max-height:200px;}
+  .pcards{grid-template-columns:1fr 1fr;}
+  .pg{grid-template-columns:1fr;}
+  .pg3{grid-template-columns:1fr 1fr;}
+}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem;}
+.modal{background:var(--surf);border-radius:var(--r);border:1px solid var(--brd);width:100%;max-width:420px;padding:24px;}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:16px;}
+.modal .pf{margin-bottom:12px;}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<div class="sidebar">
+  <div class="sb-header">
+    <h2>DUCELIT S.A.</h2>
+    <p>Carpetas de importación</p>
+  </div>
+  <div class="sb-actions">
+    <button class="btn-new" onclick="newCarpeta()">
+      <span style="font-size:16px;line-height:1;">+</span> Nueva carpeta
+    </button>
+  </div>
+  <div class="sb-search">
+    <input type="text" placeholder="Buscar..." oninput="filterList(this.value)" id="sb-search">
+  </div>
+  <div class="sb-list" id="sb-list">
+    <div class="sb-empty">Sin carpetas aún.<br>Creá la primera con el botón de arriba.</div>
+  </div>
+</div>
+
+<!-- ═══════════ MAIN ═══════════ -->
+<div class="main">
+<div class="main-inner" id="main-inner">
+
+  <!-- WELCOME STATE -->
+  <div class="welcome" id="welcome-state">
+    <div style="font-size:40px;margin-bottom:16px;">📦</div>
+    <h3>Seleccioná o creá una carpeta</h3>
+    <p>Cada carpeta representa una importación. Podés guardar todos los parámetros, productos y cálculos de cada despacho.</p>
+  </div>
+
+  <!-- EDITOR STATE (hidden by default) -->
+  <div id="editor-state" style="display:none;">
+
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="topbar-l">
+        <input type="text" class="title-inp" id="carp-title" placeholder="Nombre de la carpeta..." onchange="saveCurrent()">
+        <div class="code-badge" id="carp-code-badge"><span class="cb-lbl">ID</span><span id="carp-code-display">—</span></div>
+      </div>
+      <div class="topbar-r">
+        <button class="btn-sm btn-ghost" onclick="duplicarCarpeta()">Duplicar</button>
+        <button class="btn-sm btn-primary" onclick="saveAndNotify()">Guardar ✓</button>
+        <button class="btn-sm btn-danger" onclick="deleteCarpeta()">Eliminar</button>
+      </div>
+    </div>
+
+    <!-- Meta row -->
+    <div class="meta-row">
+      <div class="meta-field">
+        <label>Código único</label>
+        <input type="text" id="carp-codigo" readonly style="font-family:var(--mono);font-size:12px;background:var(--surf2);color:var(--gr);font-weight:500;cursor:default;border-color:var(--brd);" title="Código auto-generado, no editable">
+      </div>
+      <div class="meta-field">
+        <label>Fecha</label>
+        <input type="date" id="carp-fecha" onchange="saveCurrent()">
+      </div>
+      <div class="meta-field">
+        <label>Mes</label>
+        <select id="carp-mes" onchange="saveCurrent()">
+          <option value="">—</option>
+          <option>Enero</option><option>Febrero</option><option>Marzo</option>
+          <option>Abril</option><option>Mayo</option><option>Junio</option>
+          <option>Julio</option><option>Agosto</option><option>Septiembre</option>
+          <option>Octubre</option><option>Noviembre</option><option>Diciembre</option>
+        </select>
+      </div>
+      <div class="meta-field">
+        <label>Año</label>
+        <select id="carp-anio" onchange="saveCurrent()">
+          <option>2025</option><option selected>2026</option><option>2027</option>
+        </select>
+      </div>
+      <div class="meta-field wide">
+        <label>Ref. Carpeta / Despacho</label>
+        <input type="text" id="carp-ref" placeholder="ej. 018241" onchange="saveCurrent()">
+      </div>
+      <div class="meta-field wide">
+        <label>Proveedor</label>
+        <input type="text" id="carp-proveedor" placeholder="ej. TINHY GEOSYNTHETICS" onchange="saveCurrent()">
+      </div>
+      <div class="meta-field">
+        <label>Aduana</label>
+        <select id="carp-aduana" onchange="saveCurrent()">
+          <option>Montevideo</option><option>Colonia</option><option>Fray Bentos</option><option>Rivera</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ══ PRODUCTOS ══ -->
+    <div class="sec">
+      <div class="sec-hd">
+        <div class="pip pip-g"></div>
+        <span class="lbl">Productos importados</span>
+        <span class="hint">Seleccioná el NCM → el arancel AEC se completa automáticamente · Editalo si necesitás</span>
+      </div>
+      <div class="sec-bd" style="padding:12px 16px;overflow-x:auto;">
+        <table class="pt">
+          <thead>
+            <tr>
+              <th style="min-width:140px;">Producto / Descripción</th>
+              <th style="min-width:200px;">NCM (código + descripción)</th>
+              <th style="min-width:80px;">AEC %</th>
+              <th style="min-width:130px;">CIF Montevideo (USD)</th>
+              <th style="min-width:80px;">Rolls / Unid.</th>
+              <th style="min-width:90px;">Peso bruto (kg)</th>
+              <th style="min-width:70px;">Cnts.</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="prod-tbody"></tbody>
+        </table>
+        <button class="add-prod-btn" onclick="addProdRow()">+ Agregar producto</button>
+      </div>
+    </div>
+
+    <!-- ══ PARAMS (2 cols) ══ -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+
+      <!-- Operación -->
+      <div class="sec">
+        <div class="sec-hd"><div class="pip pip-a"></div><span class="lbl">Parámetros de operación</span></div>
+        <div class="sec-bd">
+          <div class="pg">
+            <div class="pf">
+              <label>Flete marítimo (USD)</label>
+              <input type="number" id="p-flete" value="0" min="0">
+            </div>
+            <div class="pf">
+              <label>Ajuste / Dif. flete (USD)</label>
+              <input type="number" id="p-flete-dif" value="0" min="0">
+              <span class="hint ok" id="p-flete-dif-hint"></span>
+            </div>
+          </div>
+          <div class="pg">
+            <div class="pf">
+              <label>Seguro (USD)</label>
+              <input type="number" id="p-seguro" value="0" min="0">
+            </div>
+            <div class="pf">
+              <label>Tipo de cambio ($/USD)</label>
+              <input type="number" id="p-tc" value="39.56" step="0.01">
+            </div>
+          </div>
+          <div class="pg">
+            <div class="pf">
+              <label>Contenedores totales</label>
+              <input type="number" id="p-cnts" value="57" min="1">
+              <span class="hint">Total de la operación</span>
+            </div>
+            <div class="pf">
+              <label>Origen mercadería</label>
+              <select id="p-origen">
+                <option value="extra">China / Extra-zona (AEC completo)</option>
+                <option value="mercosur">MERCOSUR (0% arancel)</option>
+                <option value="aladi">ALADI — preferencia parcial</option>
+              </select>
+            </div>
+          </div>
+          <hr class="s">
+          <div class="pg">
+            <div class="pf">
+              <label>Honorarios despachante (USD)</label>
+              <input type="number" id="p-honor" value="0" min="0" placeholder="No incluido en planilla">
+            </div>
+            <div class="pf">
+              <label>Gastos operativos agencia (USD)</label>
+              <input type="number" id="p-gastos" value="0" min="0" placeholder="Pendiente confirmar">
+            </div>
+          </div>
+          <div class="pf">
+            <label>Notas de la operación</label>
+            <textarea id="p-notas" rows="2" style="width:100%;padding:6px 9px;border:1px solid var(--brd);border-radius:var(--rs);font-family:var(--sans);font-size:12px;background:var(--bg);color:var(--tx);outline:none;resize:vertical;" placeholder="Observaciones, pendientes..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tributos -->
+      <div class="sec">
+        <div class="sec-hd"><div class="pip pip-r"></div><span class="lbl">Tributos y tasas</span></div>
+        <div class="sec-bd" style="padding:10px 16px;">
+          <div class="trow"><div><div class="trow-nm">IVA importación<span class="pill pill-g">22%</span></div><div class="trow-ht">Recuperable para contribuyente IVA</div></div><label class="sw"><input type="checkbox" id="t-iva" checked><span class="sw-t"></span></label></div>
+          <div class="trow"><div><div class="trow-nm">Adelanto IVA<span class="pill pill-g">~10%</span></div><div class="trow-ht">Etapas siguientes — recuperable</div></div><label class="sw"><input type="checkbox" id="t-adv" checked><span class="sw-t"></span></label></div>
+          <div class="trow"><div><div class="trow-nm">IMADUNI<span class="pill pill-a">5% s/CIF</span></div><div class="trow-ht">Impuesto Aduanero Único a la Importación</div></div><label class="sw"><input type="checkbox" id="t-imaduni" checked><span class="sw-t"></span></label></div>
+          <div class="trow"><div><div class="trow-nm">Recargo<span class="pill pill-a">10% s/CIF</span></div><div class="trow-ht">Recargo adicional de importación</div></div><label class="sw"><input type="checkbox" id="t-recargo" checked><span class="sw-t"></span></label></div>
+          <div class="trow"><div><div class="trow-nm">Tasa Estiba<span class="pill pill-g">0.25% FOB</span></div><div class="trow-ht">Ley 15.131</div></div><label class="sw"><input type="checkbox" id="t-estiba" checked><span class="sw-t"></span></label></div>
+          <div class="trow"><div><div class="trow-nm">Tasas Consulares<span class="pill pill-a">5% s/CIF</span></div><div class="trow-ht">Verificado planilla 018241</div></div><label class="sw"><input type="checkbox" id="t-consular" checked><span class="sw-t"></span></label></div>
+          <div class="trow"><div><div class="trow-nm">Guías de tránsito<span class="pill pill-g">fija USD 10</span></div></div><label class="sw"><input type="checkbox" id="t-guias" checked><span class="sw-t"></span></label></div>
+          <div class="trow"><div><div class="trow-nm">Escáner + TSA + Timbre<span class="pill pill-g">fija USD 71</span></div><div class="trow-ht">USD 14 + 50 + 7</div></div><label class="sw"><input type="checkbox" id="t-fijas" checked><span class="sw-t"></span></label></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ LOGÍSTICA ══ -->
+    <div class="sec">
+      <div class="sec-hd"><div class="pip pip-a"></div><span class="lbl">Terminal y logística</span><span class="hint">USD por contenedor — editá según cotización del despachante</span></div>
+      <div class="sec-bd">
+        <div class="lg-grid">
+          <div class="lg-item"><div class="lg-top"><span class="lg-nm">Descarga ANP</span><label class="sw"><input type="checkbox" id="l-anp" checked><span class="sw-t"></span></label></div><div class="lg-inp"><span>USD/cnt</span><input type="number" id="lc-anp" value="549" min="0"></div></div>
+          <div class="lg-item"><div class="lg-top"><span class="lg-nm">Terminal retiro cargado</span><label class="sw"><input type="checkbox" id="l-term" checked><span class="sw-t"></span></label></div><div class="lg-inp"><span>USD/cnt</span><input type="number" id="lc-term" value="557" min="0"></div></div>
+          <div class="lg-item"><div class="lg-top"><span class="lg-nm">Dev. contenedores vacíos</span><label class="sw"><input type="checkbox" id="l-devv" checked><span class="sw-t"></span></label></div><div class="lg-inp"><span>USD/cnt</span><input type="number" id="lc-devv" value="279" min="0"></div></div>
+          <div class="lg-item"><div class="lg-top"><span class="lg-nm">Control balanza</span><label class="sw"><input type="checkbox" id="l-bal" checked><span class="sw-t"></span></label></div><div class="lg-inp"><span>USD/cnt</span><input type="number" id="lc-bal" value="42" min="0"></div></div>
+          <div class="lg-item"><div class="lg-top"><span class="lg-nm">Transporte <span class="pill pill-a" style="font-size:9px;">+IVA 22%</span></span><label class="sw"><input type="checkbox" id="l-transp" checked><span class="sw-t"></span></label></div><div class="lg-inp"><span>USD/cnt</span><input type="number" id="lc-transp" value="522" min="0"></div></div>
+          <div class="lg-item"><div class="lg-top"><span class="lg-nm">Serv. extraordinario</span><label class="sw"><input type="checkbox" id="l-extra" checked><span class="sw-t"></span></label></div><div class="lg-inp"><span>USD total</span><input type="number" id="lc-extra" value="600" min="0"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calcular()">Calcular estimación →</button>
+
+    <!-- ══ RESULTADOS ══ -->
+    <div id="res-sec" style="display:none;margin-top:1rem;">
+      <div class="sec">
+        <div class="sec-hd"><div class="pip pip-g"></div><span class="lbl">Resultado estimado</span></div>
+        <div class="sec-bd">
+
+          <!-- Fila 1: base -->
+          <div class="stat-grid">
+            <div class="stat"><div class="s-l">CIF total ajustado</div><div class="s-v" id="r-cif">—</div><div class="s-s">base tributaria</div></div>
+            <div class="stat"><div class="s-l">IMADUNI <span style="font-weight:400;text-transform:none;letter-spacing:0;">~5% s/CIF</span></div><div class="s-v sv-a" id="r-imaduni">—</div><div class="s-s">Imp. Aduanero Único</div></div>
+            <div class="stat"><div class="s-l">Recargo <span style="font-weight:400;text-transform:none;letter-spacing:0;">10% s/CIF</span></div><div class="s-v sv-a" id="r-recargo">—</div><div class="s-s">Derecho adicional</div></div>
+          </div>
+          <!-- Fila 2: IVA + logística + total -->
+          <div class="stat-grid-2">
+            <div class="stat"><div class="s-l">IVA 22% <span style="font-weight:400;text-transform:none;letter-spacing:0;">recuperable</span></div><div class="s-v sv-r" id="r-iva">—</div><div class="s-s" id="r-iva-base">base: —</div></div>
+            <div class="stat"><div class="s-l">Gastos de despacho</div><div class="s-v sv-b" id="r-despacho">—</div><div class="s-s">logística + tasas fijas</div></div>
+            <div class="stat s-accent"><div class="s-l">Total estimado</div><div class="s-v sv-g" id="r-total">—</div><div class="s-s" id="r-total-p">—</div></div>
+          </div>
+
+          <!-- Barra composición -->
+          <div class="cbar" id="cbar">
+            <div id="b-cif"   style="background:#9FC8B4;"></div>
+            <div id="b-imad"  style="background:#E8A060;"></div>
+            <div id="b-rec"   style="background:#D07030;"></div>
+            <div id="b-iva"   style="background:#C85030;"></div>
+            <div id="b-log"   style="background:#7898B0;"></div>
+          </div>
+          <div class="cleg" style="margin-bottom:16px;">
+            <span><span class="dl" style="background:#9FC8B4;"></span>CIF <b id="l-cif"></b></span>
+            <span><span class="dl" style="background:#E8A060;"></span>IMADUNI <b id="l-imad"></b></span>
+            <span><span class="dl" style="background:#D07030;"></span>Recargo <b id="l-rec"></b></span>
+            <span><span class="dl" style="background:#C85030;"></span>IVA+Adv <b id="l-iva"></b></span>
+            <span><span class="dl" style="background:#7898B0;"></span>Despacho <b id="l-log"></b></span>
+          </div>
+
+          <!-- Dos paneles separados -->
+          <div class="two-panel">
+
+            <!-- Panel IVA -->
+            <div class="panel-box">
+              <div class="panel-box-hd" style="background:var(--rd-l);">
+                <div class="pip" style="background:var(--rd-m);"></div>
+                <span class="ph-label" style="color:var(--rd-m);">IVA a pagar</span>
+                <span class="ph-total sv-r" id="rp-iva-total">—</span>
+              </div>
+              <div class="panel-box-bd">
+                <div class="pbl"><span class="pbl-nm">IMADUNI (~5% CIF)</span><span class="pbl-v sv-a" id="rp-imaduni">—</span></div>
+                <div class="pbl"><span class="pbl-nm">Recargo (10% CIF)</span><span class="pbl-v sv-a" id="rp-recargo">—</span></div>
+                <div class="pbl"><span class="pbl-nm">IVA 22%<span class="pbl-rec">⟲ recuperable</span></span><span class="pbl-v sv-r" id="rp-iva">—</span></div>
+                <div class="pbl"><span class="pbl-nm">Adelanto IVA 10%<span class="pbl-rec">⟲ recuperable</span></span><span class="pbl-v sv-r" id="rp-adv">—</span></div>
+                <div class="pbl" style="margin-top:4px;padding-top:8px;border-top:2px solid var(--brd);"><span class="pbl-nm" style="font-weight:600;color:var(--gr);">IVA total recuperable<br><span style="font-size:10px;font-weight:400;color:var(--tx3);">IVA 22% + Adelanto 10%</span></span><span class="pbl-v sv-g" id="rp-iva-recup">—</span></div>
+                <div class="pbl"><span class="pbl-nm" style="font-weight:600;">Costo efectivo real<br><span style="font-size:10px;font-weight:400;color:var(--tx3);">Total − IVA recuperable</span></span><span class="pbl-v sv-a" id="rp-sin-iva">—</span></div>
+              </div>
+            </div>
+
+            <!-- Panel Gastos de despacho -->
+            <div class="panel-box">
+              <div class="panel-box-hd" style="background:var(--am-l);">
+                <div class="pip" style="background:var(--am-m);"></div>
+                <span class="ph-label" style="color:var(--am-m);">Gastos de despacho</span>
+                <span class="ph-total sv-a" id="rp-desp-total">—</span>
+              </div>
+              <div class="panel-box-bd">
+                <div class="pbl"><span class="pbl-nm">Tasa Estiba (0.25% FOB)</span><span class="pbl-v" id="rp-estiba">—</span></div>
+                <div class="pbl"><span class="pbl-nm">Tasas Consulares</span><span class="pbl-v" id="rp-consular">—</span></div>
+                <div class="pbl"><span class="pbl-nm">Guías + Escáner + TSA + Timbre</span><span class="pbl-v" id="rp-fijas">—</span></div>
+                <div class="pbl"><span class="pbl-nm">Descarga ANP</span><span class="pbl-v" id="rp-anp">—</span></div>
+                <div class="pbl"><span class="pbl-nm">Terminal + Dev. vacíos + Balanza</span><span class="pbl-v" id="rp-terminal">—</span></div>
+                <div class="pbl"><span class="pbl-nm">Transporte terrestre (c/IVA)</span><span class="pbl-v" id="rp-transp">—</span></div>
+                <div class="pbl"><span class="pbl-nm">Serv. extraordinario</span><span class="pbl-v" id="rp-extra">—</span></div>
+                <div class="pbl" id="rp-honor-row" style="display:none;"><span class="pbl-nm">Honorarios despachante</span><span class="pbl-v" id="rp-honor">—</span></div>
+              </div>
+            </div>
+
+          </div><!-- /two-panel -->
+
+          <!-- Total final -->
+          <div class="total-final">
+            <div>
+              <div class="tf-label">Total estimado</div>
+              <div class="tf-pesos" id="r-total-p">—</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="tf-usd" id="r-total">—</div>
+              <div class="tf-pesos">costo real sin IVA: <span id="r-excl-iva">—</span></div>
+            </div>
+          </div>
+
+          <!-- Producto cards -->
+          <div class="pcards" id="prod-res-cards"></div>
+
+          <!-- Desglose completo -->
+          <table class="brt"><thead><tr><th>Concepto</th><th>USD</th><th>Pesos $</th></tr></thead><tbody id="br-body"></tbody></table>
+
+          <div class="cmp" id="cmp-box" style="display:none;">
+            <div class="cmp-l"><div>Comparativo vs. planilla despachante (Carpeta 018241)</div><div style="font-size:10px;color:var(--tx3);">Ref: USD 655.436,56 · Sin honorarios ni gastos operativos</div></div>
+            <div class="cmp-v" id="cmp-v">—</div>
+          </div>
+          <div class="ibox warn" style="margin-top:10px;">⚠ <strong>IVA (22%) y Adelanto IVA (~10%) son recuperables</strong> si DUCELIT es contribuyente IVA. El costo efectivo real es el total <em>menos</em> esos dos conceptos.</div>
+          <div class="ibox gray" style="margin-top:6px;">Honorarios despachante y gastos operativos de agencia <strong>no están contemplados</strong> si no los ingresaste arriba.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /editor-state -->
+</div><!-- /main-inner -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODAL nueva carpeta -->
+<div class="modal-bg" id="modal-new" style="display:none;">
+  <div class="modal">
+    <h3>Nueva carpeta de importación</h3>
+    <div class="pf"><label>Nombre</label><input type="text" id="m-nombre" placeholder="ej. Importación Membranas Q1 2026"></div>
+    <div class="pf"><label>Referencia / N° carpeta</label><input type="text" id="m-ref" placeholder="ej. 018241"></div>
+    <div class="pf"><label>Fecha</label><input type="date" id="m-fecha"></div>
+    <div class="pf"><label>Cargar datos de referencia (Proforma THIDB260129)</label>
+      <select id="m-template">
+        <option value="">Vacía</option>
+        <option value="thidb260129">THIDB260129 — TINHY GEOSYNTHETICS (USD 975.940,77 CIF)</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-sm btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn-sm btn-primary" onclick="createCarpeta()">Crear carpeta</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="position:fixed;bottom:24px;right:24px;background:var(--gr);color:#fff;padding:10px 18px;border-radius:var(--rs);font-size:13px;font-weight:500;display:none;z-index:200;"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  NCM DATABASE — Uruguay / MERCOSUR
+//  Fuente: AEC MERCOSUR + DNA Uruguay
+// ══════════════════════════════════════════
+const NCM_LIST = [
+  // ── CAP 39 — PLÁSTICOS ──
+  {c:'3920109090', d:'Láminas/placas HDPE sin alveolar — Geomembrana', aec:14},
+  {c:'3920109019', d:'Láminas polietileno, otras — Geomembrana', aec:14},
+  {c:'3920109099', d:'Láminas polietileno, residual — Geomembrana', aec:14},
+  {c:'3920209000', d:'Láminas/placas polipropileno', aec:14},
+  {c:'3920309000', d:'Láminas/placas poliestireno', aec:14},
+  {c:'3920430000', d:'Láminas PVC sin plastificantes', aec:14},
+  {c:'3920490000', d:'Láminas PVC otras', aec:14},
+  {c:'3920999090', d:'Láminas de otros plásticos', aec:14},
+  {c:'3926909090', d:'Manufacturas de plástico — Geogrid / Geonet / Geodren (residual)', aec:14},
+  {c:'3926909099', d:'Manufacturas de plástico — Geogrid / Geodren NEC', aec:14},
+  {c:'3926909000', d:'Manufacturas de plástico, otras NEC', aec:12},
+  {c:'3926901000', d:'Guarniciones para muebles, carrocerías', aec:12},
+  {c:'3926100000', d:'Artículos de oficina y escolares', aec:12},
+  {c:'3926200000', d:'Prendas de vestir y accesorios', aec:20},
+  {c:'3926300000', d:'Herrajes para muebles, carrocerías', aec:12},
+  {c:'3926400000', d:'Estatuillas y adornos de plástico', aec:18},
+  // ── CAP 56 — TEXTILES NO TEJIDOS ──
+  {c:'5603941000', d:'Telas sin tejer PP >150g/m² — Geotextil no tejido 400g', aec:18},
+  {c:'5603940000', d:'Telas sin tejer >150g/m² otras', aec:18},
+  {c:'5603931000', d:'Telas sin tejer 70-150g/m² — Geotextil', aec:18},
+  {c:'5603930000', d:'Telas sin tejer 70-150g/m² otras', aec:18},
+  {c:'5603921000', d:'Telas sin tejer 25-70g/m²', aec:18},
+  {c:'5603920000', d:'Telas sin tejer 25-70g/m² otras', aec:18},
+  {c:'5603110000', d:'Telas sin tejer ≤25g/m² filamentos continuos', aec:18},
+  {c:'5603120000', d:'Telas sin tejer 25-70g/m² filamentos continuos', aec:18},
+  {c:'5603130000', d:'Telas sin tejer 70-150g/m² filamentos continuos', aec:18},
+  {c:'5603140000', d:'Telas sin tejer >150g/m² filamentos continuos', aec:18},
+  {c:'5603910000', d:'Telas sin tejer ≤25g/m² otras fibras', aec:18},
+  {c:'5603910000', d:'Telas sin tejer ≤25g/m²', aec:18},
+  // ── CAP 68 — MINERALES / ARTÍCULOS DE PIEDRA ──
+  {c:'6815999090', d:'Artículos de minerales — GCL (Geocomposito bentonítico) NEC', aec:12},
+  {c:'6815999000', d:'Artículos de minerales, otras manufacuras NEC', aec:12},
+  {c:'6815999900', d:'Artículos de minerales residual', aec:12},
+  {c:'6815200000', d:'Artículos de turba', aec:12},
+  {c:'6815100000', d:'Artículos de grafito', aec:10},
+  {c:'6815910000', d:'Artículos de vermiculita, perlita, cloritas', aec:12},
+  {c:'6815920000', d:'Artículos de mezclas de magnesita, dolomita, cromita', aec:12},
+  // ── CAP 84/85 — BIENES DE CAPITAL (0%) ──
+  {c:'8474100000', d:'Máquinas de selección, cribado (bienes de capital)', aec:0},
+  {c:'8474200000', d:'Máquinas para triturar o pulverizar', aec:0},
+  {c:'8474390000', d:'Mezcladores para minerales y otras', aec:0},
+  {c:'8479899000', d:'Máquinas de uso general NEC', aec:0},
+  {c:'8537109000', d:'Cuadros y paneles eléctricos', aec:0},
+  // ── CAP 39 adicionales BK ──
+  {c:'3901100000', d:'Polietileno densidad <0.94 en formas primarias', aec:14},
+  {c:'3901200000', d:'Polietileno densidad ≥0.94 en formas primarias', aec:14},
+  {c:'3902100000', d:'Polipropileno en formas primarias', aec:14},
+  // ── CAP 54/55 — FIBRAS SINTÉTICAS ──
+  {c:'5407100000', d:'Tejidos de hilados de filamentos alta tenacidad', aec:18},
+  {c:'5512110000', d:'Tejidos de fibras de poliéster', aec:18},
+  // ── CAP 73 — HIERRO Y ACERO ──
+  {c:'7314190000', d:'Telas metálicas de hierro o acero', aec:10},
+  {c:'7314200000', d:'Rejillas, redes de hierro o acero', aec:10},
+  // ── CAP 70 — VIDRIO ──
+  {c:'7019400000', d:'Tejidos de fibra de vidrio', aec:12},
+  {c:'7019590000', d:'Otros tejidos de fibra de vidrio', aec:12},
+];
+
+// ── CODE GENERATOR ─────────────────────────────
+// Format: IMP-AAAAMM-NNN  (e.g. IMP-202601-001)
+function generateCode(fecha) {
+  try {
+    // get sequence counter from storage
+    let seq = parseInt(localStorage.getItem('ducelit_seq')||'0') + 1;
+    localStorage.setItem('ducelit_seq', seq);
+    const d = fecha ? new Date(fecha+'T12:00:00') : new Date();
+    const yy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    return `IMP-${yy}${mm}-${String(seq).padStart(3,'0')}`;
+  } catch(e) {
+    return 'IMP-'+Date.now().toString(36).toUpperCase().slice(-6);
+  }
+}
+
+// ── STATE ──────────────────────────────────────
+let carpetas = {};
+let currentId = null;
+let prodRowId = 0;
+
+const TEMPLATE_THIDB = {
+  title:'Importación Geosintéticos — THIDB260129',
+  fecha:'2026-01-29',
+  mes:'Enero', anio:'2026',
+  ref:'018241', proveedor:'TINHY GEOSYNTHETICS CO., LTD',
+  aduana:'Montevideo',
+  notas:'PI THIDB260129 · CIF ajustado: USD 945.310,77 (proforma) + USD 30.629,13 (dif. flete, pago HSBC 25/03/2026 ID Eu11696260325154107) = USD 975.940,77\nContenedores: 41×40ft + 16×20ft = 57 total\nPago: 20% T/T + 80% L/C at sight · Banco: Bank of China · SWIFT: BKCHCNBJ500',
+  flete:0, flete_dif:30629.13, seguro:0, tc:39.56, cnts:57, origen:'extra',
+  honor:0, gastos:0,
+  t_iva:true, t_adv:true, t_imaduni:true, t_recargo:true,
+  t_estiba:true, t_consular:true, t_guias:true, t_fijas:true,
+  l_anp:true, lc_anp:549, l_term:true, lc_term:557,
+  l_devv:true, lc_devv:279, l_bal:true, lc_bal:42,
+  l_transp:true, lc_transp:522, l_extra:true, lc_extra:600,
+  productos:[
+    {nombre:'PP Geogrid', desc:'50KN/50KN · 3.95m×50m · 323 rolls · 35.207 kg', ncm:'3926909090', aec:14, cif:93137.05,  rolls:323, peso:35207,  cnts:0},
+    {nombre:'GCL',        desc:'6000g/m² 7mm · 5.8m×30m · 617 rolls · 655.254 kg', ncm:'6815999090', aec:12, cif:338177.70, rolls:617, peso:655254, cnts:0},
+    {nombre:'HDPE Geomembrane', desc:'1.5mm black GM13 · 8m×80m · 176 rolls · 171.776 kg', ncm:'3920109090', aec:14, cif:284979.20, rolls:176, peso:171776, cnts:0},
+    {nombre:'Geonet',     desc:'5.0mm 830kPa · 3.9m×50m · 541 rolls · 82.232 kg', ncm:'3926909090', aec:14, cif:148747.95, rolls:541, peso:82232,  cnts:0},
+    {nombre:'Geotextile', desc:'PP 400g/m² UV · 6m×100m · 202 rolls · 48.480 kg', ncm:'5603941000', aec:18, cif:110898.00, rolls:202, peso:48480,  cnts:0},
+  ]
+};
+
+// ── STORAGE ────────────────────────────────────
+function load(){ try{ const d=localStorage.getItem('ducelit_carpetas'); if(d) carpetas=JSON.parse(d); }catch(e){} }
+function save(){ try{ localStorage.setItem('ducelit_carpetas',JSON.stringify(carpetas)); }catch(e){} }
+
+// ── SIDEBAR ────────────────────────────────────
+function renderSidebar(filter=''){
+  const list = document.getElementById('sb-list');
+  const ids = Object.keys(carpetas).sort((a,b)=> (carpetas[b].updatedAt||0)-(carpetas[a].updatedAt||0));
+  if(!ids.length){ list.innerHTML='<div class="sb-empty">Sin carpetas aún.<br>Creá la primera arriba.</div>'; return; }
+
+  // group by year-month
+  const groups = {};
+  ids.forEach(id=>{
+    const c = carpetas[id];
+    const key = (c.anio||'2026')+'-'+(c.mes||'Sin mes');
+    if(!groups[key]) groups[key]=[];
+    groups[key].push(id);
+  });
+
+  let html='';
+  Object.keys(groups).sort().reverse().forEach(gk=>{
+    const parts=gk.split('-');
+    html+=`<div class="sb-group"><div class="sb-group-hd">${parts[1]} ${parts[0]}</div>`;
+    groups[gk].forEach(id=>{
+      const c=carpetas[id];
+      const name=c.title||'Sin nombre';
+      if(filter && !name.toLowerCase().includes(filter.toLowerCase()) && !(c.ref||'').toLowerCase().includes(filter.toLowerCase())) return;
+      const active=id===currentId?'active':'';
+      const total=c.lastTotal ? `USD ${c.lastTotal.toLocaleString('es-UY',{maximumFractionDigits:0})}` : '';
+      html+=`<div class="sb-item ${active}" id="si-${id}" onclick="openCarpeta('${id}')">
+        <div class="sb-item-l">
+          <div class="sb-item-name">${name}</div>
+          <div class="sb-item-meta">${c.codigo||''} · ${c.proveedor||'—'}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <span class="sb-item-total">${total}</span>
+          <span class="sb-item-del" onclick="event.stopPropagation();confirmDelete('${id}')" title="Eliminar">×</span>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  list.innerHTML = html || '<div class="sb-empty">Sin resultados.</div>';
+}
+function filterList(v){ renderSidebar(v); }
+
+// ── MODAL ──────────────────────────────────────
+function newCarpeta(){ document.getElementById('m-fecha').value=new Date().toISOString().split('T')[0]; document.getElementById('modal-new').style.display='flex'; }
+function closeModal(){ document.getElementById('modal-new').style.display='none'; }
+function createCarpeta(){
+  const nombre = document.getElementById('m-nombre').value.trim() || 'Nueva importación';
+  const ref = document.getElementById('m-ref').value.trim();
+  const fecha = document.getElementById('m-fecha').value;
+  const tmpl = document.getElementById('m-template').value;
+  const id = 'c_'+Date.now();
+  const now = Date.now();
+  const codigo = generateCode(fecha);
+  if(tmpl==='thidb260129'){
+    carpetas[id] = {...TEMPLATE_THIDB, id, codigo, title:nombre||TEMPLATE_THIDB.title, ref:ref||TEMPLATE_THIDB.ref, fecha:fecha||TEMPLATE_THIDB.fecha, createdAt:now, updatedAt:now};
+  } else {
+    carpetas[id] = {id, codigo, title:nombre, ref, fecha, mes:'', anio:'2026', proveedor:'', aduana:'Montevideo', notas:'',
+      flete:0, flete_dif:0, seguro:0, tc:39.56, cnts:1, origen:'extra', honor:0, gastos:0,
+      t_iva:true, t_adv:true, t_imaduni:true, t_recargo:true, t_estiba:true, t_consular:true, t_guias:true, t_fijas:true,
+      l_anp:true, lc_anp:549, l_term:true, lc_term:557, l_devv:true, lc_devv:279, l_bal:true, lc_bal:42,
+      l_transp:true, lc_transp:522, l_extra:true, lc_extra:600, productos:[], createdAt:now, updatedAt:now};
+  }
+  save(); closeModal(); renderSidebar(); openCarpeta(id);
+  document.getElementById('m-nombre').value=''; document.getElementById('m-ref').value='';
+}
+
+// ── OPEN CARPETA ───────────────────────────────
+function openCarpeta(id){
+  currentId = id;
+  const c = carpetas[id];
+  // migrate legacy entries without code
+  if(!c.codigo){ c.codigo = generateCode(c.fecha); save(); }
+
+  document.getElementById('welcome-state').style.display='none';
+  document.getElementById('editor-state').style.display='block';
+  document.getElementById('res-sec').style.display='none';
+
+  // show code
+  document.getElementById('carp-codigo').value = c.codigo;
+  document.getElementById('carp-code-display').textContent = c.codigo;
+
+  // fill fields
+  document.getElementById('carp-title').value = c.title||'';
+  document.getElementById('carp-fecha').value = c.fecha||'';
+  document.getElementById('carp-mes').value = c.mes||'';
+  document.getElementById('carp-anio').value = c.anio||'2026';
+  document.getElementById('carp-ref').value = c.ref||'';
+  document.getElementById('carp-proveedor').value = c.proveedor||'';
+  document.getElementById('carp-aduana').value = c.aduana||'Montevideo';
+
+  document.getElementById('p-flete').value = c.flete||0;
+  document.getElementById('p-flete-dif').value = c.flete_dif||0;
+  document.getElementById('p-seguro').value = c.seguro||0;
+  document.getElementById('p-tc').value = c.tc||39.56;
+  document.getElementById('p-cnts').value = c.cnts||1;
+  document.getElementById('p-origen').value = c.origen||'extra';
+  document.getElementById('p-honor').value = c.honor||0;
+  document.getElementById('p-gastos').value = c.gastos||0;
+  document.getElementById('p-notas').value = c.notas||'';
+  if(c.flete_dif>0) document.getElementById('p-flete-dif-hint').textContent='↑ '+usd(c.flete_dif)+' incluido en CIF';
+
+  // tributos
+  ['iva','adv','imaduni','recargo','estiba','consular','guias','fijas'].forEach(k=>{
+    document.getElementById('t-'+k).checked = c['t_'+k]!==false;
+  });
+  // logistica
+  ['anp','term','devv','bal','transp','extra'].forEach(k=>{
+    document.getElementById('l-'+k).checked = c['l_'+k]!==false;
+    document.getElementById('lc-'+k).value = c['lc_'+k]||0;
+  });
+
+  // productos
+  renderProdRows(c.productos||[]);
+  renderSidebar();
+  document.getElementById('main-inner').scrollTop=0;
+}
+
+// ── SAVE CURRENT ───────────────────────────────
+function saveCurrent(){
+  if(!currentId) return;
+  const c = carpetas[currentId];
+  c.title = document.getElementById('carp-title').value;
+  c.fecha = document.getElementById('carp-fecha').value;
+  c.mes   = document.getElementById('carp-mes').value;
+  c.anio  = document.getElementById('carp-anio').value;
+  c.ref   = document.getElementById('carp-ref').value;
+  c.proveedor = document.getElementById('carp-proveedor').value;
+  c.aduana = document.getElementById('carp-aduana').value;
+  c.flete  = +document.getElementById('p-flete').value||0;
+  c.flete_dif = +document.getElementById('p-flete-dif').value||0;
+  c.seguro = +document.getElementById('p-seguro').value||0;
+  c.tc     = +document.getElementById('p-tc').value||39.56;
+  c.cnts   = +document.getElementById('p-cnts').value||1;
+  c.origen = document.getElementById('p-origen').value;
+  c.honor  = +document.getElementById('p-honor').value||0;
+  c.gastos = +document.getElementById('p-gastos').value||0;
+  c.notas  = document.getElementById('p-notas').value;
+  ['iva','adv','imaduni','recargo','estiba','consular','guias','fijas'].forEach(k=>{ c['t_'+k]=document.getElementById('t-'+k).checked; });
+  ['anp','term','devv','bal','transp','extra'].forEach(k=>{ c['l_'+k]=document.getElementById('l-'+k).checked; c['lc_'+k]=+document.getElementById('lc-'+k).value||0; });
+  c.productos = readProdRows();
+  c.updatedAt = Date.now();
+  save(); renderSidebar();
+}
+function saveAndNotify(){ saveCurrent(); toast('Guardado ✓'); }
+
+// ── PRODUCTS ───────────────────────────────────
+function buildNcmOptions(sel){ NCM_LIST.forEach(n=>{ const o=document.createElement('option'); o.value=n.c; o.textContent=n.c+' — '+n.d; sel.appendChild(o); }); }
+
+function renderProdRows(prods){
+  const tb = document.getElementById('prod-tbody');
+  tb.innerHTML=''; prodRowId=0;
+  prods.forEach(p=>addProdRow(p));
+}
+function addProdRow(p){
+  const id=prodRowId++;
+  const tb=document.getElementById('prod-tbody');
+  const tr=document.createElement('tr');
+  tr.id='pr-'+id;
+  const aec = p ? p.aec : 14;
+  const aecCls = aec===0?'aec-0':aec<=12?'aec-12':aec<=14?'aec-14':'aec-18';
+
+  tr.innerHTML=`
+    <td style="min-width:140px;">
+      <input type="text" id="pn-${id}" value="${p?escH(p.nombre):''}" placeholder="Nombre producto..." style="margin-bottom:3px;font-family:var(--sans);font-size:12px;font-weight:500;">
+      <input type="text" id="pd-${id}" value="${p?escH(p.desc):''}" placeholder="Especificación / descripción..." style="font-size:11px;color:var(--tx3);font-family:var(--sans);">
+    </td>
+    <td>
+      <select id="ps-${id}" class="ncm-sel" onchange="onNcmChange(${id})">
+        <option value="">— Seleccionar NCM —</option>
+      </select>
+    </td>
+    <td style="min-width:80px;text-align:center;">
+      <div id="aec-disp-${id}" class="aec-show ${aecCls}" style="margin-bottom:3px;">${aec}%</div>
+      <input type="number" id="aec-inp-${id}" value="${aec}" min="0" max="35" style="max-width:54px;font-size:11px;text-align:center;" oninput="updateAecDisp(${id})">
+    </td>
+    <td><input type="number" id="cif-${id}" value="${p?p.cif:0}" min="0" step="100" style="min-width:120px;"></td>
+    <td><input type="number" id="rolls-${id}" value="${p?p.rolls:0}" min="0" style="max-width:70px;"></td>
+    <td><input type="number" id="peso-${id}" value="${p?p.peso:0}" min="0" style="max-width:90px;"></td>
+    <td><input type="number" id="cnts-${id}" value="${p?p.cnts:0}" min="0" style="max-width:60px;"></td>
+    <td><button class="del-btn" onclick="removeProdRow(${id})" title="Eliminar">×</button></td>
+  `;
+  tb.appendChild(tr);
+
+  const sel = document.getElementById('ps-'+id);
+  buildNcmOptions(sel);
+  if(p && p.ncm){ sel.value=p.ncm; if(!sel.value){ const opt=document.createElement('option'); opt.value=p.ncm; opt.textContent=p.ncm+' (manual)'; sel.prepend(opt); sel.value=p.ncm; } }
+}
+function removeProdRow(id){ const r=document.getElementById('pr-'+id); if(r) r.remove(); }
+function onNcmChange(id){
+  const sel=document.getElementById('ps-'+id);
+  const ncm=NCM_LIST.find(n=>n.c===sel.value);
+  if(ncm){
+    document.getElementById('aec-inp-'+id).value=ncm.aec;
+    updateAecDisp(id);
+  }
+}
+function updateAecDisp(id){
+  const v=+document.getElementById('aec-inp-'+id).value||0;
+  const d=document.getElementById('aec-disp-'+id);
+  d.textContent=v+'%';
+  d.className='aec-show '+(v===0?'aec-0':v<=12?'aec-12':v<=14?'aec-14':'aec-18');
+}
+function readProdRows(){
+  const prods=[]; let id=0;
+  while(document.getElementById('pr-'+id)!==null || id<prodRowId){
+    if(document.getElementById('pr-'+id)){
+      prods.push({
+        nombre: document.getElementById('pn-'+id).value,
+        desc:   document.getElementById('pd-'+id).value,
+        ncm:    document.getElementById('ps-'+id).value,
+        aec:    +document.getElementById('aec-inp-'+id).value||0,
+        cif:    +document.getElementById('cif-'+id).value||0,
+        rolls:  +document.getElementById('rolls-'+id).value||0,
+        peso:   +document.getElementById('peso-'+id).value||0,
+        cnts:   +document.getElementById('cnts-'+id).value||0,
+      });
+    } id++;
+  } return prods;
+}
+
+// ── DELETE / DUPLICATE ─────────────────────────
+function deleteCarpeta(){
+  if(!currentId) return;
+  if(!confirm('¿Eliminar esta carpeta? Esta acción no se puede deshacer.')) return;
+  delete carpetas[currentId]; save(); currentId=null;
+  document.getElementById('welcome-state').style.display='flex';
+  document.getElementById('editor-state').style.display='none';
+  renderSidebar();
+}
+function confirmDelete(id){ if(confirm('¿Eliminar esta carpeta?')){ delete carpetas[id]; save(); if(currentId===id){ currentId=null; document.getElementById('welcome-state').style.display='flex'; document.getElementById('editor-state').style.display='none'; } renderSidebar(); } }
+function duplicarCarpeta(){
+  if(!currentId) return;
+  saveCurrent();
+  const orig=carpetas[currentId];
+  const newId='c_'+Date.now();
+  const newCodigo = generateCode(orig.fecha);
+  carpetas[newId]={...JSON.parse(JSON.stringify(orig)), id:newId, codigo:newCodigo, title:(orig.title||'Carpeta')+' (copia)', createdAt:Date.now(), updatedAt:Date.now()};
+  save(); renderSidebar(); openCarpeta(newId); toast('Carpeta duplicada · '+newCodigo);
+}
+
+// ── HELPERS ────────────────────────────────────
+function v(id){ return parseFloat(document.getElementById(id).value)||0; }
+function on(id){ return document.getElementById(id).checked; }
+function usd(n){ return 'USD '+n.toLocaleString('es-UY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function ps(n){ return '$ '+Math.round(n).toLocaleString('es-UY'); }
+function pct(n){ return n.toFixed(1)+'%'; }
+function escH(s){ return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',2500); }
+
+// ── CÁLCULO ────────────────────────────────────
+function calcular(){
+  saveCurrent();
+  const tc = v('p-tc')||39.56;
+  const flete = v('p-flete');
+  const flete_dif = v('p-flete-dif');
+  const seguro = v('p-seguro');
+  const cnts = v('p-cnts')||1;
+  const origen = document.getElementById('p-origen').value;
+  const origenExtra = origen !== 'mercosur';
+
+  const prods = readProdRows();
+  const fobTotal = prods.reduce((a,p)=>a+p.cif,0); // CIF ya incluye flete+seguro base del proveedor
+  const cifBase = fobTotal;
+  const cif = cifBase + flete_dif + flete + seguro; // ajuste total
+
+  // Arancel por producto (AEC sobre CIF de cada producto)
+  let arancelUSD = 0;
+  prods.forEach(p=>{
+    if(origenExtra){ arancelUSD += p.cif * (p.aec/100); }
+  });
+
+  // IMADUNI 5% y Recargo 10% sobre CIF total
+  const imaduni  = on('t-imaduni') ? cif * 0.05 * tc : 0;
+  const recargo  = on('t-recargo') ? cif * 0.10 * tc : 0;
+
+  // BASE IVA = CIF + IMADUNI + RECARGO  (sin sumar el arancel AEC — se muestra aparte)
+  // Verificado planilla 018241: (975.940,80 + 49.554,40 + 97.594,04) × 22% = USD 247.079,63 ✓ exacto
+  const base_imp_pesos = cif * tc + imaduni + recargo;
+  const iva      = on('t-iva')     ? base_imp_pesos * 0.22 : 0;
+  const adv      = on('t-adv')     ? base_imp_pesos * 0.10 : 0;
+  const estiba   = on('t-estiba')  ? cif * 0.0025 * tc : 0;
+  const consular = on('t-consular')? cif * 0.05   * tc : 0;
+  const guias    = on('t-guias')   ? 10*tc : 0;
+  const fijas    = on('t-fijas')   ? 71*tc : 0;
+  const tributos = iva+adv+imaduni+recargo+estiba+consular+guias+fijas;
+  const anpP    = on('l-anp')   ? cnts*v('lc-anp')*tc : 0;
+  const termP   = on('l-term')  ? cnts*v('lc-term')*tc : 0;
+  const devvP   = on('l-devv')  ? cnts*v('lc-devv')*tc : 0;
+  const balP    = on('l-bal')   ? cnts*v('lc-bal')*tc : 0;
+  const transpP = on('l-transp')? cnts*v('lc-transp')*tc*1.22 : 0;
+  const extraP  = on('l-extra') ? v('lc-extra')*tc : 0;
+  const honorP  = v('p-honor')*tc;
+  const gastosP = v('p-gastos')*tc;
+  const logistica = anpP+termP+devvP+balP+transpP+extraP+honorP+gastosP;
+
+  const despachoP = estiba+consular+guias+fijas+anpP+termP+devvP+balP+transpP+extraP+honorP+gastosP;
+  const totalP = cif*tc + imaduni + recargo + iva + adv + despachoP;
+  const totalUSD = totalP/tc;
+  const sinIvaUSD = (cif*tc + imaduni + recargo + despachoP) / tc;
+
+  // ── stats fila 1 ──
+  document.getElementById('r-cif').textContent     = usd(cif);
+  document.getElementById('r-imaduni').textContent = usd(imaduni/tc);
+  document.getElementById('r-recargo').textContent = usd(recargo/tc);
+
+  // ── stats fila 2 ──
+  document.getElementById('r-iva').textContent       = usd(iva/tc);
+  document.getElementById('r-iva-base').textContent  = 'base: '+usd(base_imp_pesos/tc);
+  document.getElementById('r-despacho').textContent  = usd(despachoP/tc);
+  document.getElementById('r-total').textContent     = usd(totalUSD);
+  document.getElementById('r-total-p').textContent   = ps(totalP)+' pesos';
+  document.getElementById('r-excl-iva').textContent  = usd(sinIvaUSD);
+
+  // ── barra ──
+  const base = totalUSD||1;
+  const pCif  = cif/base;
+  const pImad = imaduni/tc/base;
+  const pRec  = recargo/tc/base;
+  const pIva  = (iva+adv)/tc/base;
+  const pLog  = despachoP/tc/base;
+  document.getElementById('b-cif').style.width  = pct(pCif*100);
+  document.getElementById('b-imad').style.width = pct(pImad*100);
+  document.getElementById('b-rec').style.width  = pct(pRec*100);
+  document.getElementById('b-iva').style.width  = pct(pIva*100);
+  document.getElementById('b-log').style.width  = pct(pLog*100);
+  document.getElementById('l-cif').textContent  = pct(pCif*100);
+  document.getElementById('l-imad').textContent = pct(pImad*100);
+  document.getElementById('l-rec').textContent  = pct(pRec*100);
+  document.getElementById('l-iva').textContent  = pct(pIva*100);
+  document.getElementById('l-log').textContent  = pct(pLog*100);
+
+  // ── panel IVA ──
+  document.getElementById('rp-iva-total').textContent   = usd((imaduni+recargo+iva+adv)/tc);
+  document.getElementById('rp-imaduni').textContent     = usd(imaduni/tc);
+  document.getElementById('rp-recargo').textContent     = usd(recargo/tc);
+  document.getElementById('rp-iva').textContent         = on('t-iva') ? usd(iva/tc) : '—';
+  document.getElementById('rp-adv').textContent         = on('t-adv') ? usd(adv/tc) : '—';
+  document.getElementById('rp-iva-recup').textContent   = usd((iva+adv)/tc);
+  document.getElementById('rp-sin-iva').textContent     = usd(sinIvaUSD);
+
+  // ── panel despacho ──
+  document.getElementById('rp-desp-total').textContent  = usd(despachoP/tc);
+  document.getElementById('rp-estiba').textContent      = on('t-estiba')   ? usd(estiba/tc)   : '—';
+  document.getElementById('rp-consular').textContent    = on('t-consular') ? usd(consular/tc) : '—';
+  document.getElementById('rp-fijas').textContent       = on('t-fijas')    ? usd(fijas/tc)    : '—';
+  document.getElementById('rp-anp').textContent         = on('l-anp')      ? usd(anpP/tc)     : '—';
+  document.getElementById('rp-terminal').textContent    = usd((termP+devvP+balP)/tc);
+  document.getElementById('rp-transp').textContent      = on('l-transp')   ? usd(transpP/tc)  : '—';
+  document.getElementById('rp-extra').textContent       = on('l-extra')    ? usd(extraP/tc)   : '—';
+  if(honorP>0){ document.getElementById('rp-honor-row').style.display='flex'; document.getElementById('rp-honor').textContent=usd(honorP/tc); }
+  else { document.getElementById('rp-honor-row').style.display='none'; }
+
+  // prod cards
+  let pcHtml='';
+  prods.forEach(p=>{
+    if(p.cif<=0) return;
+    pcHtml+=`<div class="pcard"><div class="pc-nm" title="${escH(p.nombre)}">${escH(p.nombre)}</div><div class="pc-cif">${usd(p.cif)}</div><div class="pc-aec">${p.ncm||'—'}</div><div class="pc-aran">IMADUNI+Rec: ${usd(p.cif*0.15)}</div></div>`;
+  });
+  document.getElementById('prod-res-cards').innerHTML=pcHtml;
+
+  // desglose
+  const br=document.getElementById('br-body');
+  const row=(label,u,p,grp,tot,recup)=>{
+    if(grp) return `<tr class="grp"><td colspan="3">${label}</td></tr>`;
+    if(u===null && p===null) return '';
+    const rv=recup?'<span class="rec">⟲ recuperable</span>':'';
+    if(tot) return `<tr class="tot"><td>${label}</td><td>${usd(u)}</td><td>${ps(p)}</td></tr>`;
+    return `<tr><td>${label}${rv}</td><td class="muted">${u>0?usd(u):'—'}</td><td>${p>0?ps(p):'—'}</td></tr>`;
+  };
+  let html='';
+  html+=row('BASE Y CIF',0,0,true);
+  prods.filter(p=>p.cif>0).forEach(p=>{ html+=row(escH(p.nombre)+' ('+escH(p.ncm||'—')+')', p.cif, p.cif*tc); });
+  if(flete_dif>0) html+=row('Ajuste / dif. flete (HSBC)', flete_dif, flete_dif*tc);
+  if(flete>0) html+=row('Flete marítimo', flete, flete*tc);
+  if(seguro>0) html+=row('Seguro', seguro, seguro*tc);
+  html+=row('CIF total ajustado (base tributaria)', cif, cif*tc);
+
+  html+=row('ARANCEL AEC',0,0,true);
+  prods.filter(p=>p.cif>0&&origenExtra).forEach(p=>{ html+=row(escH(p.nombre)+' '+p.aec+'%', p.cif*(p.aec/100), p.cif*(p.aec/100)*tc); });
+  if(!origenExtra) html+=row('MERCOSUR — exento',0,0);
+
+  html+=row('TRIBUTOS EXENTOS DE IVA',0,0,true);
+  if(on('t-imaduni'))  html+=row('IMADUNI (5% sobre CIF)', imaduni/tc, imaduni);
+  if(on('t-recargo'))  html+=row('Recargo (10% sobre CIF)', recargo/tc, recargo);
+  if(on('t-estiba'))   html+=row('Tasa Estiba (0.25% FOB)', estiba/tc, estiba);
+  if(on('t-consular')) html+=row('Tasas Consulares', consular/tc, consular);
+  if(on('t-guias'))    html+=row('Guías de tránsito', guias/tc, guias);
+  if(on('t-fijas'))    html+=row('Escáner + TSA + Timbre AURI', fijas/tc, fijas);
+
+  html+=row('TRIBUTOS GRAVADOS DE IVA',0,0,true);
+  if(on('t-iva')) html+=row('IVA 22% (base: CIF + IMADUNI + Recargo' + (arancelUSD>0?' + Arancel':'')+')' , iva/tc, iva, false,false,true);
+  if(on('t-adv')) html+=row('Adelanto IVA 10% (misma base)', adv/tc, adv, false,false,true);
+
+  html+=row('LOGÍSTICA Y TERMINAL',0,0,true);
+  if(on('l-anp'))    html+=row('Descarga ANP ('+cnts+' cnts × '+usd(v('lc-anp'))+')', anpP/tc, anpP);
+  if(on('l-term'))   html+=row('Terminal retiro cargado', termP/tc, termP);
+  if(on('l-devv'))   html+=row('Dev. contenedores vacíos', devvP/tc, devvP);
+  if(on('l-bal'))    html+=row('Control balanza', balP/tc, balP);
+  if(on('l-transp')) html+=row('Transporte terrestre (c/IVA 22%)', transpP/tc, transpP);
+  if(on('l-extra'))  html+=row('Servicio extraordinario', extraP/tc, extraP);
+  if(honorP>0) html+=row('Honorarios despachante', honorP/tc, honorP);
+  if(gastosP>0) html+=row('Gastos operativos agencia', gastosP/tc, gastosP);
+
+  html+=row('TOTAL ESTIMADO', totalUSD, totalP, false, true);
+  br.innerHTML=html;
+
+  // cmp
+  const ref=655436.56;
+  const diff=totalUSD-ref;
+  const cmpBox=document.getElementById('cmp-box');
+  cmpBox.style.display='flex';
+  document.getElementById('cmp-v').textContent=(diff>=0?'+':'')+usd(diff)+' ('+(diff>=0?'+':'')+((diff/ref)*100).toFixed(1)+'%)';
+  document.getElementById('cmp-v').className='cmp-v '+(diff>0?'pos':'neg');
+
+  // guardar resultado
+  carpetas[currentId].lastTotal=totalUSD; save(); renderSidebar();
+  document.getElementById('res-sec').style.display='block';
+  document.getElementById('res-sec').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── INIT ───────────────────────────────────────
+load();
+
+// Primera vez: crear carpeta THIDB260129 automáticamente
+if(Object.keys(carpetas).length === 0) {
+  const firstId = 'c_'+Date.now();
+  // Force sequence to start at 1 for this specific entry
+  localStorage.setItem('ducelit_seq','0');
+  const firstCodigo = generateCode('2026-01-29');
+  carpetas[firstId] = {
+    ...TEMPLATE_THIDB,
+    id: firstId,
+    codigo: firstCodigo,
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+  save();
+}
+
+renderSidebar();
+// Auto-abre la más reciente
+const ids=Object.keys(carpetas);
+if(ids.length>0){ openCarpeta(ids.sort((a,b)=>(carpetas[b].updatedAt||0)-(carpetas[a].updatedAt||0))[0]); }
+</script>
+</body>
+</html>
