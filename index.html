@@ -509,7 +509,7 @@ hr.s{border:none;border-top:1px solid var(--brd);margin:12px 0;}
           <!-- Dos paneles separados -->
           <div class="two-panel">
 
-            <!-- Panel IVA -->
+            <!-- Panel IVA — solo 22% y 10% -->
             <div class="panel-box">
               <div class="panel-box-hd" style="background:var(--rd-l);">
                 <div class="pip" style="background:var(--rd-m);"></div>
@@ -517,16 +517,14 @@ hr.s{border:none;border-top:1px solid var(--brd);margin:12px 0;}
                 <span class="ph-total sv-r" id="rp-iva-total">—</span>
               </div>
               <div class="panel-box-bd">
-                <div class="pbl"><span class="pbl-nm">IMADUNI (~5% CIF)</span><span class="pbl-v sv-a" id="rp-imaduni">—</span></div>
-                <div class="pbl"><span class="pbl-nm">Recargo (10% CIF)</span><span class="pbl-v sv-a" id="rp-recargo">—</span></div>
                 <div class="pbl"><span class="pbl-nm">IVA 22%<span class="pbl-rec">⟲ recuperable</span></span><span class="pbl-v sv-r" id="rp-iva">—</span></div>
                 <div class="pbl"><span class="pbl-nm">Adelanto IVA 10%<span class="pbl-rec">⟲ recuperable</span></span><span class="pbl-v sv-r" id="rp-adv">—</span></div>
-                <div class="pbl" style="margin-top:4px;padding-top:8px;border-top:2px solid var(--brd);"><span class="pbl-nm" style="font-weight:600;color:var(--gr);">IVA total recuperable<br><span style="font-size:10px;font-weight:400;color:var(--tx3);">IVA 22% + Adelanto 10%</span></span><span class="pbl-v sv-g" id="rp-iva-recup">—</span></div>
-                <div class="pbl"><span class="pbl-nm" style="font-weight:600;">Costo efectivo real<br><span style="font-size:10px;font-weight:400;color:var(--tx3);">Total − IVA recuperable</span></span><span class="pbl-v sv-a" id="rp-sin-iva">—</span></div>
+                <div class="pbl" style="padding-top:8px;border-top:1px solid var(--brd);margin-top:4px;"><span class="pbl-nm" style="font-weight:600;color:var(--gr);">IVA total recuperable<br><span style="font-size:10px;font-weight:400;color:var(--tx3);">IVA 22% + Adelanto 10%</span></span><span class="pbl-v sv-g" id="rp-iva-recup">—</span></div>
+                <div class="pbl" style="padding-top:8px;border-top:2px solid var(--brd);margin-top:4px;"><span class="pbl-nm" style="font-weight:600;">Costo efectivo real<br><span style="font-size:10px;font-weight:400;color:var(--tx3);">Total − IVA recuperable</span></span><span class="pbl-v sv-a" id="rp-sin-iva">—</span></div>
               </div>
             </div>
 
-            <!-- Panel Gastos de despacho -->
+            <!-- Panel Gastos de despacho — IMADUNI, Recargo + logística -->
             <div class="panel-box">
               <div class="panel-box-hd" style="background:var(--am-l);">
                 <div class="pip" style="background:var(--am-m);"></div>
@@ -534,8 +532,11 @@ hr.s{border:none;border-top:1px solid var(--brd);margin:12px 0;}
                 <span class="ph-total sv-a" id="rp-desp-total">—</span>
               </div>
               <div class="panel-box-bd">
-                <div class="pbl"><span class="pbl-nm">Tasa Estiba (0.25% FOB)</span><span class="pbl-v" id="rp-estiba">—</span></div>
-                <div class="pbl"><span class="pbl-nm">Tasas Consulares</span><span class="pbl-v" id="rp-consular">—</span></div>
+                <div class="pbl"><span class="pbl-nm">IMADUNI (~5% CIF)</span><span class="pbl-v sv-a" id="rp-imaduni">—</span></div>
+                <div class="pbl"><span class="pbl-nm">Recargo (10% CIF)</span><span class="pbl-v sv-a" id="rp-recargo">—</span></div>
+                <div style="border-top:1px dashed var(--brd);margin:6px 0;"></div>
+                <div class="pbl"><span class="pbl-nm">Tasa Estiba (0.25% CIF)</span><span class="pbl-v" id="rp-estiba">—</span></div>
+                <div class="pbl"><span class="pbl-nm">Tasas Consulares (5% CIF)</span><span class="pbl-v" id="rp-consular">—</span></div>
                 <div class="pbl"><span class="pbl-nm">Guías + Escáner + TSA + Timbre</span><span class="pbl-v" id="rp-fijas">—</span></div>
                 <div class="pbl"><span class="pbl-nm">Descarga ANP</span><span class="pbl-v" id="rp-anp">—</span></div>
                 <div class="pbl"><span class="pbl-nm">Terminal + Dev. vacíos + Balanza</span><span class="pbl-v" id="rp-terminal">—</span></div>
@@ -1013,7 +1014,8 @@ function calcular(){
   const despachoP = estiba+consular+guias+fijas+anpP+termP+devvP+balP+transpP+extraP+honorP+gastosP;
   const totalP = cif*tc + imaduni + recargo + iva + adv + despachoP;
   const totalUSD = totalP/tc;
-  const sinIvaUSD = (cif*tc + imaduni + recargo + despachoP) / tc;
+  // Costo efectivo real = total sin IVA recuperable (iva+adv)
+  const sinIvaUSD = (totalP - iva - adv) / tc;
 
   // ── stats fila 1 ──
   document.getElementById('r-cif').textContent     = usd(cif);
@@ -1046,17 +1048,18 @@ function calcular(){
   document.getElementById('l-iva').textContent  = pct(pIva*100);
   document.getElementById('l-log').textContent  = pct(pLog*100);
 
-  // ── panel IVA ──
-  document.getElementById('rp-iva-total').textContent   = usd((imaduni+recargo+iva+adv)/tc);
+  // ── panel IVA (solo 22% y 10%) ──
+  document.getElementById('rp-iva-total').textContent  = usd((iva+adv)/tc);
+  document.getElementById('rp-iva').textContent        = on('t-iva') ? usd(iva/tc) : '—';
+  document.getElementById('rp-adv').textContent        = on('t-adv') ? usd(adv/tc) : '—';
+  document.getElementById('rp-iva-recup').textContent  = usd((iva+adv)/tc);
+  document.getElementById('rp-sin-iva').textContent    = usd(sinIvaUSD);
+
+  // ── panel despacho (IMADUNI + Recargo + logística) ──
+  const despTotal = imaduni + recargo + despachoP;
+  document.getElementById('rp-desp-total').textContent  = usd(despTotal/tc);
   document.getElementById('rp-imaduni').textContent     = usd(imaduni/tc);
   document.getElementById('rp-recargo').textContent     = usd(recargo/tc);
-  document.getElementById('rp-iva').textContent         = on('t-iva') ? usd(iva/tc) : '—';
-  document.getElementById('rp-adv').textContent         = on('t-adv') ? usd(adv/tc) : '—';
-  document.getElementById('rp-iva-recup').textContent   = usd((iva+adv)/tc);
-  document.getElementById('rp-sin-iva').textContent     = usd(sinIvaUSD);
-
-  // ── panel despacho ──
-  document.getElementById('rp-desp-total').textContent  = usd(despachoP/tc);
   document.getElementById('rp-estiba').textContent      = on('t-estiba')   ? usd(estiba/tc)   : '—';
   document.getElementById('rp-consular').textContent    = on('t-consular') ? usd(consular/tc) : '—';
   document.getElementById('rp-fijas').textContent       = on('t-fijas')    ? usd(fijas/tc)    : '—';
