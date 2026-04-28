@@ -817,25 +817,23 @@ async function save() {
 }
 
 function sanitize(obj) {
-  // Remove undefined values for Firestore
   return JSON.parse(JSON.stringify(obj));
 }
 
+// Sequence stored locally — no Firestore counter doc needed
 async function nextSeq() {
-  try {
-    const ref = window._fb.docu(`users/${currentUser.uid}/meta/counter`);
-    const snap = await window._fb.getDoc(ref);
-    if (!snap.exists || (snap.exists && !snap.exists())) {
-      await window._fb.setDoc(ref, { seq: 1 });
-      return 1;
-    }
-    const current = (snap.data()?.seq || 0) + 1;
-    await window._fb.setDoc(ref, { seq: current });
-    return current;
-  } catch(e) {
-    console.warn('nextSeq error, using timestamp fallback', e);
-    return Date.now() % 1000;
-  }
+  const key = `ducelit_seq_${currentUser.uid}`;
+  const current = parseInt(localStorage.getItem(key) || '0') + 1;
+  localStorage.setItem(key, current);
+  return current;
+}
+
+function generateCode(fecha, seq) {
+  const d = fecha ? new Date(fecha + 'T12:00:00') : new Date();
+  const yy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const num = seq !== undefined ? seq : (parseInt(localStorage.getItem(`ducelit_seq_${currentUser?.uid}`) || '1'));
+  return `IMP-${yy}${mm}-${String(num).padStart(3, '0')}`;
 }
 
 // ── SUBSCRIBE TO CARPETAS ──────────────────────
@@ -899,14 +897,6 @@ function showScreen(name) {
   document.getElementById('loading-screen').style.display = 'none';
   document.getElementById('login-screen').style.display   = name==='login' ? 'flex' : 'none';
   document.getElementById('app-screen').style.display     = name==='app'   ? 'flex' : 'none';
-}
-
-// ── GENERATE CODE ──────────────────────────────
-function generateCode(fecha, seq) {
-  const d  = fecha ? new Date(fecha+'T12:00:00') : new Date();
-  const yy = d.getFullYear();
-  const mm = String(d.getMonth()+1).padStart(2,'0');
-  return `IMP-${yy}${mm}-${String(seq).padStart(3,'0')}`;
 }
 
 // ── SIDEBAR ────────────────────────────────────
