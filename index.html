@@ -3,8 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Importaciones · DUCELIT S.A.</title>
+<title>Importaciones · Aborgama Gestión Ambiental</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp }             from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+                                      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+         onSnapshot, query, orderBy, serverTimestamp, getDoc, setDoc, increment }
+                                      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyA3pEmZfhk6ARunO6ERXzB9MjiU8PG3ptc",
+  authDomain:        "importaciones-d8c77.firebaseapp.com",
+  projectId:         "importaciones-d8c77",
+  storageBucket:     "importaciones-d8c77.firebasestorage.app",
+  messagingSenderId: "311196561262",
+  appId:             "1:311196561262:web:f09b3cb0e0ac8f08a49b7f"
+};
+const fbApp  = initializeApp(firebaseConfig);
+const fbAuth = getAuth(fbApp);
+const fbDb   = getFirestore(fbApp);
+
+// ── Expose to global scope for use in non-module scripts ──
+window._fb = { auth: fbAuth, db: fbDb,
+  signIn: (e,p) => signInWithEmailAndPassword(fbAuth, e, p),
+  signOut: ()   => signOut(fbAuth),
+  onAuth:  (cb) => onAuthStateChanged(fbAuth, cb),
+  col:  (path)     => collection(fbDb, path),
+  docu: (path)     => doc(fbDb, path),
+  add:  (col,data) => addDoc(col, {...data, updatedAt: serverTimestamp(), createdAt: serverTimestamp()}),
+  upd:  (ref,data) => updateDoc(ref, {...data, updatedAt: serverTimestamp()}),
+  del:  (ref)      => deleteDoc(ref),
+  q:    (col)      => query(col, orderBy('updatedAt','desc')),
+  snap: (q, cb)    => onSnapshot(q, cb),
+  getDoc, setDoc, increment,
+  serverTimestamp,
+};
+window.dispatchEvent(new Event('fb-ready'));
+</script>
 <style>
 :root{
   --bg:#F4F1EC;--surf:#FFFFFF;--surf2:#EDEAE4;--surf3:#E4E0D8;
@@ -259,13 +297,75 @@ hr.s{border:none;border-top:1px solid var(--brd);margin:12px 0;}
 </head>
 <body>
 
-<div class="app">
+<!-- ═══════════ LOGIN SCREEN ═══════════ -->
+<div id="login-screen" style="display:none; min-height:100vh; background:#EEF2EE; align-items:center; justify-content:center; font-family:'IBM Plex Sans',sans-serif; padding:1rem;">
+  <div style="width:100%; max-width:400px;">
+    <div style="background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 4px 32px rgba(0,0,0,.10);">
+      <!-- Green header with logo -->
+      <div style="background:#1A6040; padding:2rem 2rem 1.75rem; text-align:center;">
+        <img src="https://www.aborgama.com/logo-verde.png" alt="Aborgama"
+          style="height:52px; filter:brightness(0) invert(1); display:block; margin:0 auto 10px;"
+          onerror="this.style.display='none'; document.getElementById('lg-fallback').style.display='block'">
+        <div id="lg-fallback" style="display:none; font-size:24px; font-weight:700; color:#fff; letter-spacing:-.3px; margin-bottom:8px;">Aborgama</div>
+        <div style="font-size:11px; color:rgba(255,255,255,.65); letter-spacing:.08em; text-transform:uppercase;">Gestión Ambiental</div>
+      </div>
+      <!-- Form -->
+      <div style="padding:2rem;">
+        <div style="font-size:16px; font-weight:600; color:#1C1A16; margin-bottom:3px;">Sistema de Importaciones</div>
+        <div style="font-size:12px; color:#9A9690; margin-bottom:1.5rem;">Ingresá con tu cuenta corporativa</div>
+        <div style="margin-bottom:14px;">
+          <label style="display:block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#5A5650; margin-bottom:5px;">Email</label>
+          <input id="login-email" type="email" placeholder="nombre@aborgama.com" onkeydown="if(event.key==='Enter')doLogin()"
+            style="width:100%; padding:10px 12px; border:1.5px solid #D0CCC4; border-radius:8px; font-family:'IBM Plex Mono',monospace; font-size:13px; background:#F8F8F6; color:#1C1A16; outline:none; box-sizing:border-box; transition:border-color .15s;"
+            onfocus="this.style.borderColor='#1A6040'" onblur="this.style.borderColor='#D0CCC4'">
+        </div>
+        <div style="margin-bottom:20px;">
+          <label style="display:block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#5A5650; margin-bottom:5px;">Contraseña</label>
+          <input id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"
+            style="width:100%; padding:10px 12px; border:1.5px solid #D0CCC4; border-radius:8px; font-family:'IBM Plex Mono',monospace; font-size:13px; background:#F8F8F6; color:#1C1A16; outline:none; box-sizing:border-box; transition:border-color .15s;"
+            onfocus="this.style.borderColor='#1A6040'" onblur="this.style.borderColor='#D0CCC4'">
+        </div>
+        <div id="login-error" style="display:none; background:#FAE8E0; border:1px solid #E8A088; border-radius:8px; padding:9px 12px; font-size:12px; color:#7A2808; margin-bottom:14px;"></div>
+        <button id="login-btn" onclick="doLogin()"
+          style="width:100%; padding:12px; background:#1A6040; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; font-family:'IBM Plex Sans',sans-serif; transition:background .15s;"
+          onmouseover="this.style.background='#0E4A30'" onmouseout="this.style.background='#1A6040'">
+          Ingresar →
+        </button>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:14px; font-size:11px; color:#8A9A8A;">
+      © 2026 Aborgama Gestión Ambiental · Uso interno
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ LOADING ═══════════ -->
+<div id="loading-screen" style="display:flex; min-height:100vh; background:#EEF2EE; align-items:center; justify-content:center; font-family:'IBM Plex Sans',sans-serif;">
+  <div style="text-align:center;">
+    <img src="https://www.aborgama.com/logo-verde.png" alt="Aborgama" style="height:40px; margin-bottom:16px; opacity:.5; display:block; margin-left:auto; margin-right:auto;">
+    <div style="font-size:13px; color:#9A9690;">Cargando...</div>
+  </div>
+</div>
+
+<div class="app" id="app-screen" style="display:none;">
 
 <!-- ═══════════ SIDEBAR ═══════════ -->
 <div class="sidebar">
   <div class="sb-header">
-    <h2>DUCELIT S.A.</h2>
-    <p>Carpetas de importación</p>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+      <img src="https://www.aborgama.com/logo-verde.png" alt="Aborgama"
+        style="height:28px; filter:brightness(0) saturate(100%) invert(24%) sepia(50%) saturate(600%) hue-rotate(110deg) brightness(90%);"
+        onerror="this.style.display='none'">
+      <div>
+        <div style="font-size:13px; font-weight:600; color:var(--tx); line-height:1.2;">Aborgama</div>
+        <div style="font-size:10px; color:var(--tx3);">Gestión Ambiental</div>
+      </div>
+    </div>
+    <div style="font-size:11px; color:var(--tx3); padding-top:6px; border-top:1px solid var(--brd);">Importaciones</div>
+    <div style="margin-top:6px; display:flex; align-items:center; justify-content:space-between;">
+      <span style="font-size:10px; color:var(--tx3); overflow:hidden; text-overflow:ellipsis; max-width:170px;" id="sb-user-email"></span>
+      <button onclick="doLogout()" style="font-size:10px; color:var(--tx3); background:none; border:none; cursor:pointer; text-decoration:underline; font-family:var(--sans); flex-shrink:0;">Salir</button>
+    </div>
   </div>
   <div class="sb-actions">
     <button class="btn-new" onclick="newCarpeta()">
@@ -581,6 +681,8 @@ hr.s{border:none;border-top:1px solid var(--brd);margin:12px 0;}
 </div><!-- /main -->
 </div><!-- /app -->
 
+</div><!-- /app (app-screen) -->
+
 <!-- MODAL nueva carpeta -->
 <div class="modal-bg" id="modal-new" style="display:none;">
   <div class="modal">
@@ -668,23 +770,7 @@ const NCM_LIST = [
   {c:'7019590000', d:'Otros tejidos de fibra de vidrio', aec:12},
 ];
 
-// ── CODE GENERATOR ─────────────────────────────
-// Format: IMP-AAAAMM-NNN  (e.g. IMP-202601-001)
-function generateCode(fecha) {
-  try {
-    // get sequence counter from storage
-    let seq = parseInt(localStorage.getItem('ducelit_seq')||'0') + 1;
-    localStorage.setItem('ducelit_seq', seq);
-    const d = fecha ? new Date(fecha+'T12:00:00') : new Date();
-    const yy = d.getFullYear();
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    return `IMP-${yy}${mm}-${String(seq).padStart(3,'0')}`;
-  } catch(e) {
-    return 'IMP-'+Date.now().toString(36).toUpperCase().slice(-6);
-  }
-}
-
-// ── STATE ──────────────────────────────────────
+// ── SIDEBAR ────────────────────────────────────
 let carpetas = {};
 let currentId = null;
 let prodRowId = 0;
@@ -712,9 +798,112 @@ const TEMPLATE_THIDB = {
   ]
 };
 
-// ── STORAGE ────────────────────────────────────
-function load(){ try{ const d=localStorage.getItem('ducelit_carpetas'); if(d) carpetas=JSON.parse(d); }catch(e){} }
-function save(){ try{ localStorage.setItem('ducelit_carpetas',JSON.stringify(carpetas)); }catch(e){} }
+// ── FIREBASE STORAGE ───────────────────────────
+let currentUser = null;
+let unsubCarpetas = null;
+
+function carpetasCol() {
+  return window._fb.col(`users/${currentUser.uid}/carpetas`);
+}
+function carpetaDoc(id) {
+  return window._fb.docu(`users/${currentUser.uid}/carpetas/${id}`);
+}
+
+async function save() {
+  if (!currentId || !currentUser) return;
+  const c = carpetas[currentId];
+  try {
+    await window._fb.upd(carpetaDoc(currentId), sanitize(c));
+  } catch(e) { console.error('save error', e); }
+}
+
+function sanitize(obj) {
+  // Remove undefined values for Firestore
+  return JSON.parse(JSON.stringify(obj));
+}
+
+async function nextSeq() {
+  const ref = window._fb.docu(`users/${currentUser.uid}/meta/counter`);
+  try {
+    await window._fb.upd(ref, { seq: window._fb.increment(1) });
+    const snap = await window._fb.getDoc(ref);
+    return snap.data().seq;
+  } catch {
+    await window._fb.setDoc(ref, { seq: 1 });
+    return 1;
+  }
+}
+
+// ── SUBSCRIBE TO CARPETAS ──────────────────────
+function subscribeToCarpetas() {
+  if (unsubCarpetas) unsubCarpetas();
+  const q = window._fb.q(carpetasCol());
+  unsubCarpetas = window._fb.snap(q, snapshot => {
+    const newCarpetas = {};
+    snapshot.docs.forEach(d => {
+      newCarpetas[d.id] = { id: d.id, ...d.data() };
+    });
+    carpetas = newCarpetas;
+    renderSidebar();
+    // Auto-open first if nothing selected
+    const ids = Object.keys(carpetas);
+    if (ids.length > 0 && !currentId) {
+      openCarpeta(ids.sort((a,b) => (carpetas[b].updatedAt?.seconds||0) - (carpetas[a].updatedAt?.seconds||0))[0]);
+    }
+    // Seed if empty
+    if (ids.length === 0) {
+      seedFirstCarpeta();
+    }
+  });
+}
+
+async function seedFirstCarpeta() {
+  const seq = await nextSeq();
+  const codigo = generateCode('2026-01-29', seq);
+  const data = sanitize({ ...TEMPLATE_THIDB, codigo });
+  const docRef = await window._fb.add(carpetasCol(), data);
+  carpetas[docRef.id] = { id: docRef.id, codigo, ...TEMPLATE_THIDB };
+  openCarpeta(docRef.id);
+}
+
+// ── AUTH FUNCTIONS ─────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const btn   = document.getElementById('login-btn');
+  const err   = document.getElementById('login-error');
+  err.style.display = 'none';
+  btn.textContent = 'Ingresando...';
+  btn.disabled = true;
+  try {
+    await window._fb.signIn(email, pass);
+  } catch(e) {
+    err.textContent = 'Credenciales incorrectas. Verificá email y contraseña.';
+    err.style.display = 'block';
+    btn.textContent = 'Ingresar →';
+    btn.disabled = false;
+  }
+}
+
+function doLogout() {
+  if (unsubCarpetas) unsubCarpetas();
+  carpetas = {}; currentId = null; currentUser = null;
+  window._fb.signOut();
+}
+
+function showScreen(name) {
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display   = name==='login' ? 'flex' : 'none';
+  document.getElementById('app-screen').style.display     = name==='app'   ? 'flex' : 'none';
+}
+
+// ── GENERATE CODE ──────────────────────────────
+function generateCode(fecha, seq) {
+  const d  = fecha ? new Date(fecha+'T12:00:00') : new Date();
+  const yy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  return `IMP-${yy}${mm}-${String(seq).padStart(3,'0')}`;
+}
 
 // ── SIDEBAR ────────────────────────────────────
 function renderSidebar(filter=''){
@@ -761,25 +950,28 @@ function filterList(v){ renderSidebar(v); }
 // ── MODAL ──────────────────────────────────────
 function newCarpeta(){ document.getElementById('m-fecha').value=new Date().toISOString().split('T')[0]; document.getElementById('modal-new').style.display='flex'; }
 function closeModal(){ document.getElementById('modal-new').style.display='none'; }
-function createCarpeta(){
+async function createCarpeta(){
   const nombre = document.getElementById('m-nombre').value.trim() || 'Nueva importación';
-  const ref = document.getElementById('m-ref').value.trim();
-  const fecha = document.getElementById('m-fecha').value;
-  const tmpl = document.getElementById('m-template').value;
-  const id = 'c_'+Date.now();
-  const now = Date.now();
-  const codigo = generateCode(fecha);
+  const ref    = document.getElementById('m-ref').value.trim();
+  const fecha  = document.getElementById('m-fecha').value;
+  const tmpl   = document.getElementById('m-template').value;
+  const seq    = await nextSeq();
+  const codigo = generateCode(fecha, seq);
+  let data;
   if(tmpl==='thidb260129'){
-    carpetas[id] = {...TEMPLATE_THIDB, id, codigo, title:nombre||TEMPLATE_THIDB.title, ref:ref||TEMPLATE_THIDB.ref, fecha:fecha||TEMPLATE_THIDB.fecha, createdAt:now, updatedAt:now};
+    data = {...TEMPLATE_THIDB, codigo, title:nombre||TEMPLATE_THIDB.title, ref:ref||TEMPLATE_THIDB.ref, fecha:fecha||TEMPLATE_THIDB.fecha};
   } else {
-    carpetas[id] = {id, codigo, title:nombre, ref, fecha, mes:'', anio:'2026', proveedor:'', aduana:'Montevideo', notas:'',
+    data = {codigo, title:nombre, ref, fecha, mes:'', anio:'2026', proveedor:'', aduana:'Montevideo', notas:'',
       flete:0, flete_dif:0, seguro:0, tc:39.56, cnts:1, origen:'extra', honor:0, gastos:0,
       t_iva:true, t_adv:true, t_imaduni:true, t_recargo:true, t_estiba:true, t_consular:true, t_guias:true, t_fijas:true,
       l_anp:true, lc_anp:549, l_term:true, lc_term:557, l_devv:true, lc_devv:279, l_bal:true, lc_bal:42,
-      l_transp:true, lc_transp:522, l_extra:true, lc_extra:600, productos:[], createdAt:now, updatedAt:now};
+      l_transp:true, lc_transp:522, l_extra:true, lc_extra:600, productos:[]};
   }
-  save(); closeModal(); renderSidebar(); openCarpeta(id);
+  const docRef = await window._fb.add(carpetasCol(), sanitize(data));
+  closeModal();
   document.getElementById('m-nombre').value=''; document.getElementById('m-ref').value='';
+  openCarpeta(docRef.id);
+  toast('Carpeta creada · '+codigo);
 }
 
 // ── OPEN CARPETA ───────────────────────────────
@@ -835,7 +1027,7 @@ function openCarpeta(id){
 
 // ── SAVE CURRENT ───────────────────────────────
 function saveCurrent(){
-  if(!currentId) return;
+  if(!currentId || !currentUser) return;
   const c = carpetas[currentId];
   c.title = document.getElementById('carp-title').value;
   c.fecha = document.getElementById('carp-fecha').value;
@@ -856,8 +1048,8 @@ function saveCurrent(){
   ['iva','adv','imaduni','recargo','estiba','consular','guias','fijas'].forEach(k=>{ c['t_'+k]=document.getElementById('t-'+k).checked; });
   ['anp','term','devv','bal','transp','extra'].forEach(k=>{ c['l_'+k]=document.getElementById('l-'+k).checked; c['lc_'+k]=+document.getElementById('lc-'+k).value||0; });
   c.productos = readProdRows();
-  c.updatedAt = Date.now();
-  save(); renderSidebar();
+  window._fb.upd(carpetaDoc(currentId), sanitize(c));
+  renderSidebar();
 }
 function saveAndNotify(){ saveCurrent(); toast('Guardado ✓'); }
 
@@ -940,20 +1132,22 @@ function readProdRows(){
 function deleteCarpeta(){
   if(!currentId) return;
   if(!confirm('¿Eliminar esta carpeta? Esta acción no se puede deshacer.')) return;
-  delete carpetas[currentId]; save(); currentId=null;
+  window._fb.del(carpetaDoc(currentId));
+  currentId=null;
   document.getElementById('welcome-state').style.display='flex';
   document.getElementById('editor-state').style.display='none';
-  renderSidebar();
 }
-function confirmDelete(id){ if(confirm('¿Eliminar esta carpeta?')){ delete carpetas[id]; save(); if(currentId===id){ currentId=null; document.getElementById('welcome-state').style.display='flex'; document.getElementById('editor-state').style.display='none'; } renderSidebar(); } }
-function duplicarCarpeta(){
+function confirmDelete(id){ if(confirm('¿Eliminar esta carpeta?')){ window._fb.del(carpetaDoc(id)); if(currentId===id){ currentId=null; document.getElementById('welcome-state').style.display='flex'; document.getElementById('editor-state').style.display='none'; } } }
+async function duplicarCarpeta(){
   if(!currentId) return;
   saveCurrent();
-  const orig=carpetas[currentId];
-  const newId='c_'+Date.now();
-  const newCodigo = generateCode(orig.fecha);
-  carpetas[newId]={...JSON.parse(JSON.stringify(orig)), id:newId, codigo:newCodigo, title:(orig.title||'Carpeta')+' (copia)', createdAt:Date.now(), updatedAt:Date.now()};
-  save(); renderSidebar(); openCarpeta(newId); toast('Carpeta duplicada · '+newCodigo);
+  const orig = carpetas[currentId];
+  const seq = await nextSeq();
+  const newCodigo = generateCode(orig.fecha, seq);
+  const {id, createdAt, updatedAt, ...rest} = orig;
+  const docRef = await window._fb.add(carpetasCol(), sanitize({...rest, codigo:newCodigo, title:(orig.title||'Carpeta')+' (copia)'}));
+  openCarpeta(docRef.id);
+  toast('Carpeta duplicada · '+newCodigo);
 }
 
 // ── HELPERS ────────────────────────────────────
@@ -1133,34 +1327,31 @@ function calcular(){
   document.getElementById('cmp-v').className='cmp-v '+(diff>0?'pos':'neg');
 
   // guardar resultado
-  carpetas[currentId].lastTotal=totalUSD; save(); renderSidebar();
+  carpetas[currentId].lastTotal=totalUSD;
+  window._fb.upd(carpetaDoc(currentId), {lastTotal: totalUSD});
+  renderSidebar();
   document.getElementById('res-sec').style.display='block';
   document.getElementById('res-sec').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // ── INIT ───────────────────────────────────────
-load();
+// Wait for Firebase to be ready, then set up auth listener
+window.addEventListener('fb-ready', () => {
+  window._fb.onAuth(user => {
+    if (user) {
+      currentUser = user;
+      document.getElementById('sb-user-email').textContent = user.email;
+      showScreen('app');
+      subscribeToCarpetas();
+    } else {
+      currentUser = null;
+      if (unsubCarpetas) { unsubCarpetas(); unsubCarpetas = null; }
+      carpetas = {}; currentId = null;
+      showScreen('login');
+    }
+  });
+});
 
-// Primera vez: crear carpeta THIDB260129 automáticamente
-if(Object.keys(carpetas).length === 0) {
-  const firstId = 'c_'+Date.now();
-  // Force sequence to start at 1 for this specific entry
-  localStorage.setItem('ducelit_seq','0');
-  const firstCodigo = generateCode('2026-01-29');
-  carpetas[firstId] = {
-    ...TEMPLATE_THIDB,
-    id: firstId,
-    codigo: firstCodigo,
-    createdAt: Date.now(),
-    updatedAt: Date.now()
-  };
-  save();
-}
-
-renderSidebar();
-// Auto-abre la más reciente
-const ids=Object.keys(carpetas);
-if(ids.length>0){ openCarpeta(ids.sort((a,b)=>(carpetas[b].updatedAt||0)-(carpetas[a].updatedAt||0))[0]); }
 </script>
 </body>
 </html>
