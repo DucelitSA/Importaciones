@@ -38,8 +38,7 @@ window._fb = { auth: fbAuth, db: fbDb,
   del:  (ref)      => deleteDoc(ref),
   q:    (col)      => query(col, orderBy('updatedAt','desc')),
   snap: (q, cb)    => onSnapshot(q, cb),
-  getDoc, setDoc, increment,
-  serverTimestamp,
+  getDoc, setDoc, increment, serverTimestamp,
 };
 window.dispatchEvent(new Event('fb-ready'));
 </script>
@@ -823,14 +822,19 @@ function sanitize(obj) {
 }
 
 async function nextSeq() {
-  const ref = window._fb.docu(`users/${currentUser.uid}/meta/counter`);
   try {
-    await window._fb.upd(ref, { seq: window._fb.increment(1) });
+    const ref = window._fb.docu(`users/${currentUser.uid}/meta/counter`);
     const snap = await window._fb.getDoc(ref);
-    return snap.data().seq;
-  } catch {
-    await window._fb.setDoc(ref, { seq: 1 });
-    return 1;
+    if (!snap.exists || (snap.exists && !snap.exists())) {
+      await window._fb.setDoc(ref, { seq: 1 });
+      return 1;
+    }
+    const current = (snap.data()?.seq || 0) + 1;
+    await window._fb.setDoc(ref, { seq: current });
+    return current;
+  } catch(e) {
+    console.warn('nextSeq error, using timestamp fallback', e);
+    return Date.now() % 1000;
   }
 }
 
@@ -951,35 +955,44 @@ function filterList(v){ renderSidebar(v); }
 function newCarpeta(){ document.getElementById('m-fecha').value=new Date().toISOString().split('T')[0]; document.getElementById('modal-new').style.display='flex'; }
 function closeModal(){ document.getElementById('modal-new').style.display='none'; }
 async function createCarpeta(){
-  const nombre = document.getElementById('m-nombre').value.trim() || 'Nueva importación';
-  const ref    = document.getElementById('m-ref').value.trim();
-  const fecha  = document.getElementById('m-fecha').value;
-  const tmpl   = document.getElementById('m-template').value;
-  const seq    = await nextSeq();
-  const codigo = generateCode(fecha, seq);
-  let data;
-  if(tmpl==='thidb260129'){
-    data = {...TEMPLATE_THIDB, codigo, title:nombre||TEMPLATE_THIDB.title, ref:ref||TEMPLATE_THIDB.ref, fecha:fecha||TEMPLATE_THIDB.fecha};
-  } else {
-    data = {codigo, title:nombre, ref, fecha, mes:'', anio:'2026', proveedor:'', aduana:'Montevideo', notas:'',
-      flete:0, flete_dif:0, seguro:0, tc:39.56, cnts:1, origen:'extra', honor:0, gastos:0,
-      t_iva:true, t_adv:true, t_imaduni:true, t_recargo:true, t_estiba:true, t_consular:true, t_guias:true, t_fijas:true,
-      l_anp:true, lc_anp:549, l_term:true, lc_term:557, l_devv:true, lc_devv:279, l_bal:true, lc_bal:42,
-      l_transp:true, lc_transp:522, l_extra:true, lc_extra:600, productos:[]};
+  const btn = document.querySelector('#modal-new .btn-primary');
+  if(btn){ btn.textContent = 'Creando...'; btn.disabled = true; }
+  try {
+    const nombre = document.getElementById('m-nombre').value.trim() || 'Nueva importación';
+    const ref    = document.getElementById('m-ref').value.trim();
+    const fecha  = document.getElementById('m-fecha').value;
+    const tmpl   = document.getElementById('m-template').value;
+    const seq    = await nextSeq();
+    const codigo = generateCode(fecha, seq);
+    let data;
+    if(tmpl==='thidb260129'){
+      data = {...TEMPLATE_THIDB, codigo, title:nombre||TEMPLATE_THIDB.title, ref:ref||TEMPLATE_THIDB.ref, fecha:fecha||TEMPLATE_THIDB.fecha};
+    } else {
+      data = {codigo, title:nombre, ref, fecha, mes:'', anio:'2026', proveedor:'', aduana:'Montevideo', notas:'',
+        flete:0, flete_dif:0, seguro:0, tc:39.56, cnts:1, origen:'extra', honor:0, gastos:0,
+        t_iva:true, t_adv:true, t_imaduni:true, t_recargo:true, t_estiba:true, t_consular:true, t_guias:true, t_fijas:true,
+        l_anp:true, lc_anp:549, l_term:true, lc_term:557, l_devv:true, lc_devv:279, l_bal:true, lc_bal:42,
+        l_transp:true, lc_transp:522, l_extra:true, lc_extra:600, productos:[]};
+    }
+    const docRef = await window._fb.add(carpetasCol(), sanitize(data));
+    closeModal();
+    document.getElementById('m-nombre').value=''; document.getElementById('m-ref').value='';
+    toast('Carpeta creada · '+codigo);
+  } catch(e) {
+    console.error('createCarpeta error:', e);
+    alert('Error al crear la carpeta: ' + e.message);
+  } finally {
+    if(btn){ btn.textContent = 'Crear carpeta'; btn.disabled = false; }
   }
-  const docRef = await window._fb.add(carpetasCol(), sanitize(data));
-  closeModal();
-  document.getElementById('m-nombre').value=''; document.getElementById('m-ref').value='';
-  openCarpeta(docRef.id);
-  toast('Carpeta creada · '+codigo);
 }
 
 // ── OPEN CARPETA ───────────────────────────────
 function openCarpeta(id){
   currentId = id;
   const c = carpetas[id];
+  if(!c){ return; }
   // migrate legacy entries without code
-  if(!c.codigo){ c.codigo = generateCode(c.fecha); save(); }
+  if(!c.codigo){ c.codigo = generateCode(c.fecha, Date.now()%1000); }
 
   document.getElementById('welcome-state').style.display='none';
   document.getElementById('editor-state').style.display='block';
