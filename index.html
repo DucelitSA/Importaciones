@@ -754,8 +754,10 @@ function genCode(fecha,seq){
   return `IMP-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}-${String(seq).padStart(3,'0')}`;
 }
 
+let seeded = false;
 function subscribeFB(){
   if(unsub)unsub();
+  seeded = false;
   unsub=window._fb.snap(window._fb.q(col()), snap=>{
     const nw={};
     snap.docs.forEach(d=>{nw[d.id]={id:d.id,...d.data()};});
@@ -765,7 +767,9 @@ function subscribeFB(){
     if(ids.length>0&&!currentId){
       openCarpeta(ids.sort((a,b)=>((carpetas[b].updatedAt?.seconds||0)-(carpetas[a].updatedAt?.seconds||0)))[0]);
     }
-    if(ids.length===0) seedFirst();
+    if(ids.length===0&&!seeded){ seeded=true; seedFirst(); }
+  }, err=>{
+    console.error('Firestore snapshot error:', err.code, err.message);
   });
 }
 
@@ -1226,11 +1230,13 @@ function w(id,p){const e=document.getElementById(id);if(e)e.style.width=pct(p);}
 
 // ═══ INIT ══════════════════════════════════════════
 window.addEventListener('fb-ready',()=>{
-  window._fb.onAuth(user=>{
+  window._fb.onAuth(async user=>{
     if(user){
       currentUser=user;
       document.getElementById('sb-email').textContent=user.email;
       showScreen('app');
+      // Force token refresh to ensure auth is fully ready before Firestore calls
+      try { await user.getIdToken(true); } catch(e){}
       subscribeFB();
     } else {
       currentUser=null;
