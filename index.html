@@ -11,7 +11,8 @@ import { initializeApp }             from 'https://www.gstatic.com/firebasejs/10
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
                                       from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
-         onSnapshot, query, orderBy, serverTimestamp, getDoc, setDoc, increment }
+         onSnapshot, query, orderBy, serverTimestamp, getDoc, setDoc, increment,
+         connectFirestoreEmulator }
                                       from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -22,22 +23,30 @@ const firebaseConfig = {
   messagingSenderId: "239843996095",
   appId:             "1:239843996095:web:41286f9287fc9d4c84710a"
 };
-const fbApp  = initializeApp(firebaseConfig);
-const fbAuth = getAuth(fbApp);
-const fbDb   = getFirestore(fbApp);
 
-// ── Expose to global scope for use in non-module scripts ──
-window._fb = { auth: fbAuth, db: fbDb,
+let fbApp, fbAuth, fbDb;
+try {
+  fbApp  = initializeApp(firebaseConfig);
+  fbAuth = getAuth(fbApp);
+  fbDb   = getFirestore(fbApp);
+  console.log('Firebase OK — proyecto:', firebaseConfig.projectId);
+} catch(e) {
+  console.error('Firebase init error:', e);
+}
+
+// ── Expose to global scope ──
+window._fb = {
+  auth: fbAuth, db: fbDb,
   signIn: (e,p) => signInWithEmailAndPassword(fbAuth, e, p),
   signOut: ()   => signOut(fbAuth),
   onAuth:  (cb) => onAuthStateChanged(fbAuth, cb),
   col:  (path)     => collection(fbDb, path),
   docu: (path)     => doc(fbDb, path),
-  add:  (col,data) => addDoc(col, {...data, updatedAt: serverTimestamp(), createdAt: serverTimestamp()}),
-  upd:  (ref,data) => updateDoc(ref, {...data, updatedAt: serverTimestamp()}),
-  del:  (ref)      => deleteDoc(ref),
-  q:    (col)      => query(col, orderBy('updatedAt','desc')),
-  snap: (q, cb)    => onSnapshot(q, cb),
+  add:  (c,data)   => addDoc(c, {...data, updatedAt: serverTimestamp(), createdAt: serverTimestamp()}),
+  upd:  (r,data)   => updateDoc(r, {...data, updatedAt: serverTimestamp()}),
+  del:  (r)        => deleteDoc(r),
+  q:    (c)        => query(c, orderBy('updatedAt','desc')),
+  snap: (q,cb)     => onSnapshot(q, cb),
   getDoc, setDoc, increment, serverTimestamp,
 };
 window.dispatchEvent(new Event('fb-ready'));
