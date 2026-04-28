@@ -15,12 +15,12 @@ import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
                                       from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
-  apiKey:            "AIzaSyA3pEmZfhk6ARunO6ERXzB9MjiU8PG3ptc",
-  authDomain:        "importaciones-d8c77.firebaseapp.com",
-  projectId:         "importaciones-d8c77",
-  storageBucket:     "importaciones-d8c77.firebasestorage.app",
-  messagingSenderId: "311196561262",
-  appId:             "1:311196561262:web:f09b3cb0e0ac8f08a49b7f"
+  apiKey:            "AIzaSyAUtBziNARBGq3nvi4yrDTiEFzIB-Tynlo",
+  authDomain:        "importacionesducelit.firebaseapp.com",
+  projectId:         "importacionesducelit",
+  storageBucket:     "importacionesducelit.firebasestorage.app",
+  messagingSenderId: "239843996095",
+  appId:             "1:239843996095:web:41286f9287fc9d4c84710a"
 };
 const fbApp  = initializeApp(firebaseConfig);
 const fbAuth = getAuth(fbApp);
@@ -797,34 +797,25 @@ const TEMPLATE_THIDB = {
   ]
 };
 
-// ── FIREBASE STORAGE ───────────────────────────
+// ── STORAGE — localStorage (Firebase Auth para login) ──
 let currentUser = null;
 let unsubCarpetas = null;
 
-function carpetasCol() {
-  return window._fb.col(`users/${currentUser.uid}/carpetas`);
+function lsKey() { return `ducelit_${currentUser.uid}`; }
+function seqKey() { return `ducelit_seq_${currentUser.uid}`; }
+
+function lsLoad() {
+  try { const d = localStorage.getItem(lsKey()); return d ? JSON.parse(d) : {}; } catch(e) { return {}; }
 }
-function carpetaDoc(id) {
-  return window._fb.docu(`users/${currentUser.uid}/carpetas/${id}`);
+function lsSave() {
+  try { localStorage.setItem(lsKey(), JSON.stringify(carpetas)); } catch(e) {}
 }
 
-async function save() {
-  if (!currentId || !currentUser) return;
-  const c = carpetas[currentId];
-  try {
-    await window._fb.upd(carpetaDoc(currentId), sanitize(c));
-  } catch(e) { console.error('save error', e); }
-}
+function sanitize(obj) { return JSON.parse(JSON.stringify(obj)); }
 
-function sanitize(obj) {
-  return JSON.parse(JSON.stringify(obj));
-}
-
-// Sequence stored locally — no Firestore counter doc needed
 async function nextSeq() {
-  const key = `ducelit_seq_${currentUser.uid}`;
-  const current = parseInt(localStorage.getItem(key) || '0') + 1;
-  localStorage.setItem(key, current);
+  const current = parseInt(localStorage.getItem(seqKey()) || '0') + 1;
+  localStorage.setItem(seqKey(), current);
   return current;
 }
 
@@ -832,41 +823,35 @@ function generateCode(fecha, seq) {
   const d = fecha ? new Date(fecha + 'T12:00:00') : new Date();
   const yy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const num = seq !== undefined ? seq : (parseInt(localStorage.getItem(`ducelit_seq_${currentUser?.uid}`) || '1'));
+  const num = seq !== undefined ? seq : parseInt(localStorage.getItem(seqKey()) || '1');
   return `IMP-${yy}${mm}-${String(num).padStart(3, '0')}`;
 }
 
-// ── SUBSCRIBE TO CARPETAS ──────────────────────
+// ── CARPETAS CRUD (localStorage) ───────────────
 function subscribeToCarpetas() {
-  if (unsubCarpetas) unsubCarpetas();
-  const q = window._fb.q(carpetasCol());
-  unsubCarpetas = window._fb.snap(q, snapshot => {
-    const newCarpetas = {};
-    snapshot.docs.forEach(d => {
-      newCarpetas[d.id] = { id: d.id, ...d.data() };
-    });
-    carpetas = newCarpetas;
-    renderSidebar();
-    // Auto-open first if nothing selected
-    const ids = Object.keys(carpetas);
-    if (ids.length > 0 && !currentId) {
-      openCarpeta(ids.sort((a,b) => (carpetas[b].updatedAt?.seconds||0) - (carpetas[a].updatedAt?.seconds||0))[0]);
-    }
-    // Seed if empty
-    if (ids.length === 0) {
-      seedFirstCarpeta();
-    }
-  });
+  // Load from localStorage and render
+  carpetas = lsLoad();
+  renderSidebar();
+  const ids = Object.keys(carpetas);
+  if (ids.length > 0) {
+    openCarpeta(ids.sort((a,b) => (carpetas[b].updatedAt||0) - (carpetas[a].updatedAt||0))[0]);
+  } else {
+    seedFirstCarpeta();
+  }
 }
 
 async function seedFirstCarpeta() {
   const seq = await nextSeq();
   const codigo = generateCode('2026-01-29', seq);
-  const data = sanitize({ ...TEMPLATE_THIDB, codigo });
-  const docRef = await window._fb.add(carpetasCol(), data);
-  carpetas[docRef.id] = { id: docRef.id, codigo, ...TEMPLATE_THIDB };
-  openCarpeta(docRef.id);
+  const id = 'c_' + Date.now();
+  carpetas[id] = sanitize({ ...TEMPLATE_THIDB, id, codigo, createdAt: Date.now(), updatedAt: Date.now() });
+  lsSave();
+  renderSidebar();
+  openCarpeta(id);
 }
+
+function carpetasCol() { return null; } // not used
+function carpetaDoc(id) { return null; } // not used
 
 // ── AUTH FUNCTIONS ─────────────────────────────
 async function doLogin() {
