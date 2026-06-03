@@ -850,8 +850,8 @@ let carpetas={}, currentId=null, prodRowId=0, currentUser=null, unsub=null, last
 let currentNav='lista';
 
 // ═══ FIREBASE ════════════════════════════════
-function col(){ return window._fb.col(`users/${currentUser.uid}/carpetas`); }
-function reff(id){ return window._fb.doc(`users/${currentUser.uid}/carpetas/${id}`); }
+function col(){ return window._fb.col(`importaciones/datos/carpetas`); }
+function reff(id){ return window._fb.doc(`importaciones/datos/carpetas/${id}`); }
 function san(o){ return JSON.parse(JSON.stringify(o)); }
 
 function nextSeq(){
@@ -1133,7 +1133,7 @@ function saveCurrent(){
   ['anp','term','devv','bal','transp','extra'].forEach(k=>{const cb=document.getElementById('l-'+k);const inp=document.getElementById('lc-'+k);if(cb)c['l_'+k]=cb.checked;if(inp)c['lc_'+k]=+inp.value||0;});
   c.productos=readProdRows();
   carpetas[currentId]=c;
-  window._fb.upd(reff(currentId),san(c)).catch(e=>console.error('save:',e));
+  window._fb.upd(reff(currentId),{...san(c), updatedBy: currentUser.email}).catch(e=>console.error('save:',e));
   renderSidebar();
 }
 function saveAndNotify(){saveCurrent();toast('Guardado ✓');}
