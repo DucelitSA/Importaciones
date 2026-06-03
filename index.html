@@ -9,7 +9,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 const FB = {
   apiKey:"AIzaSyAUtBziNARBGq3nvi4yrDTiEFzIB-Tynlo",
   authDomain:"importacionesducelit.firebaseapp.com",
@@ -22,7 +21,6 @@ try {
   const app = initializeApp(FB);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const storage = getStorage(app);
   window._fb = {
     signIn:(e,p)=>signInWithEmailAndPassword(auth,e,p),
     signOut:()=>signOut(auth),
@@ -36,9 +34,7 @@ try {
     snap:(q,cb)=>onSnapshot(q,cb),
     q:(c)=>query(c,orderBy('updatedAt','desc')),
     getDoc, setDoc, serverTimestamp,
-    auth, storage,
-    storageRef:(path)=>storageRef(storage,path),
-    uploadBytesResumable, getDownloadURL, deleteObject,
+    auth,
   };
   console.log('[Aborgama] Firebase OK');
 } catch(e){ console.error('[Aborgama] Firebase error:', e); }
@@ -545,7 +541,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);font-size:14px
 
         <!-- ADJUNTOS -->
         <div class="card" style="margin-bottom:1rem;">
-          <div class="card-hd"><div class="pip" style="background:#6B5EA8;"></div><span class="lbl">Documentos adjuntos</span><span class="hint">BL · Factura · Packing · Proforma · Fichas técnicas · Tracking · ETA · Otros</span></div>
+          <div class="card-hd"><div class="pip" style="background:#6B5EA8;"></div><span class="lbl">Documentos adjuntos</span><span class="hint">BL · Factura · Packing · Proforma · Fichas técnicas · Tracking · ETA · Otros · máx ~800KB por carga</span></div>
           <div class="card-bd" style="padding:12px 16px;" id="adj-panel">
             <div id="adj-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;min-height:36px;"></div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -1687,19 +1683,27 @@ let adjPendingFiles = [];
 function onAdjFileSelected(input){
   adjPendingFiles = Array.from(input.files);
   if(!adjPendingFiles.length) return;
-  const names = adjPendingFiles.map(f=>f.name).join(', ');
   const el = document.getElementById('adj-file-name');
   el.textContent = adjPendingFiles.length === 1 ? adjPendingFiles[0].name : adjPendingFiles.length + ' archivos seleccionados';
   el.style.color = 'var(--gr)';
   el.style.fontWeight = '600';
-  // Auto fill nombre if single file and field empty
   if(adjPendingFiles.length === 1 && !document.getElementById('adj-nombre').value)
     document.getElementById('adj-nombre').value = adjPendingFiles[0].name.replace(/\.[^.]+$/,'');
 }
 
-function addAdjunto(){
+function fileToBase64(file){
+  return new Promise((res,rej)=>{
+    const reader = new FileReader();
+    reader.onload = e => res(e.target.result); // data:mime;base64,xxx
+    reader.onerror = rej;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function addAdjunto(){
   if(!currentId) return;
   if(!adjPendingFiles.length){ toast('📁 Elegí al menos un archivo'); return; }
+
   const tipo = document.getElementById('adj-tipo').value;
   const nombre = document.getElementById('adj-nombre').value.trim();
   const fecha = document.getElementById('adj-fecha').value;
@@ -1708,81 +1712,79 @@ function addAdjunto(){
   const progressBar = document.getElementById('adj-progress-bar');
   const progressLabel = document.getElementById('adj-progress-label');
 
-  btn.disabled = true;
-  btn.textContent = '⏳ Subiendo...';
+  // Check total size — Firestore doc limit is ~1MB per field, warn at 400KB
+  const totalBytes = adjPendingFiles.reduce((a,f)=>a+f.size,0);
+  if(totalBytes > 800*1024){
+    toast('⚠️ Archivos muy grandes (máx ~800KB total). Usá archivos más pequeños o comprimidos.');
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = '⏳ Guardando...';
   progressWrap.style.display = 'block';
 
-  const uid = window._fb.auth.currentUser?.uid || 'anon';
-  let completed = 0;
-  const total = adjPendingFiles.length;
+  try {
+    const total = adjPendingFiles.length;
+    for(let idx=0; idx<total; idx++){
+      const file = adjPendingFiles[idx];
+      progressLabel.textContent = (total>1?`Archivo ${idx+1}/${total}: `:'')+file.name+' — leyendo...';
+      progressBar.style.width = Math.round((idx/total)*80)+'%';
 
-  adjPendingFiles.forEach((file, idx) => {
-    const path = `importaciones/${uid}/${currentId}/${Date.now()}_${file.name}`;
-    const fileRef = window._fb.storageRef(path);
-    const task = window._fb.uploadBytesResumable(fileRef, file);
+      const dataUrl = await fileToBase64(file);
+      const size = file.size > 1048576 ? (file.size/1048576).toFixed(1)+' MB' : Math.round(file.size/1024)+' KB';
 
-    task.on('state_changed',
-      snap => {
-        const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-        progressBar.style.width = pct + '%';
-        progressLabel.textContent = (total > 1 ? `Archivo ${idx+1}/${total}: ` : '') + file.name + ' — ' + pct + '%';
-      },
-      err => {
-        console.error(err);
-        toast('❌ Error: ' + err.message);
-        btn.disabled = false; btn.textContent = '⬆ Subir';
-        progressWrap.style.display = 'none';
-      },
-      async () => {
-        const url = await window._fb.getDownloadURL(task.snapshot.ref);
-        const adj = {
-          id: Date.now() + idx,
-          tipo,
-          nombre: total > 1 ? file.name.replace(/\.[^.]+$/,'') : (nombre || file.name.replace(/\.[^.]+$/,'')),
-          url,
-          fecha,
-          size: file.size > 1048576 ? (file.size/1048576).toFixed(1)+' MB' : Math.round(file.size/1024)+' KB',
-          storagePath: path,
-          fromStorage: true
-        };
-        if(!carpetas[currentId].adjuntos) carpetas[currentId].adjuntos = [];
-        carpetas[currentId].adjuntos.push(adj);
-        completed++;
-        if(completed === total){
-          // Reset form
-          document.getElementById('adj-nombre').value = '';
-          document.getElementById('adj-fecha').value = '';
-          document.getElementById('adj-file').value = '';
-          document.getElementById('adj-file-name').textContent = 'ningún archivo seleccionado';
-          document.getElementById('adj-file-name').style.color = 'var(--tx3)';
-          document.getElementById('adj-file-name').style.fontWeight = 'normal';
-          adjPendingFiles = [];
-          btn.disabled = false; btn.textContent = '⬆ Subir';
-          progressWrap.style.display = 'none';
-          progressBar.style.width = '0%';
-          saveCurrent();
-          renderAdjuntos();
-          toast(`✅ ${total > 1 ? total+' archivos subidos' : (adj.nombre+' subido')}`);
-        }
-      }
-    );
-  });
+      const adj = {
+        id: Date.now()+idx,
+        tipo,
+        nombre: total>1 ? file.name.replace(/\.[^.]+$/,'') : (nombre||file.name.replace(/\.[^.]+$/,'')),
+        fecha,
+        size,
+        mime: file.type||'application/octet-stream',
+        fileName: file.name,
+        data: dataUrl,  // stored in Firestore
+        fromFirestore: true
+      };
+      if(!carpetas[currentId].adjuntos) carpetas[currentId].adjuntos = [];
+      carpetas[currentId].adjuntos.push(adj);
+
+      progressBar.style.width = Math.round(((idx+1)/total)*100)+'%';
+      progressLabel.textContent = file.name+' ✓';
+    }
+
+    // Reset form
+    document.getElementById('adj-nombre').value = '';
+    document.getElementById('adj-fecha').value = '';
+    document.getElementById('adj-file').value = '';
+    document.getElementById('adj-file-name').textContent = 'ningún archivo seleccionado';
+    document.getElementById('adj-file-name').style.color = 'var(--tx3)';
+    document.getElementById('adj-file-name').style.fontWeight = 'normal';
+    adjPendingFiles = [];
+
+    saveCurrent();
+    renderAdjuntos();
+    toast('✅ '+(adjPendingFiles.length>1?adjPendingFiles.length+' archivos guardados':'Archivo guardado'));
+  } catch(e) {
+    console.error(e);
+    toast('❌ Error: '+e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '⬆ Subir';
+    setTimeout(()=>{ progressWrap.style.display='none'; progressBar.style.width='0%'; }, 1500);
+  }
 }
 
-async function delAdjunto(adjId){
+function delAdjunto(adjId){
   if(!currentId) return;
-  const adj = (carpetas[currentId].adjuntos||[]).find(a=>a.id===adjId);
-  // Delete from Storage if uploaded there
-  if(adj?.storagePath){
-    try{ await window._fb.deleteObject(window._fb.storageRef(adj.storagePath)); } catch(e){ console.warn('Storage delete:', e); }
-  }
   carpetas[currentId].adjuntos = (carpetas[currentId].adjuntos||[]).filter(a=>a.id!==adjId);
   saveCurrent(); renderAdjuntos(); toast('🗑 Eliminado');
 }
-function delAdjunto(adjId){
-  if(!currentId)return;
-  carpetas[currentId].adjuntos=(carpetas[currentId].adjuntos||[]).filter(a=>a.id!==adjId);
-  saveCurrent(); renderAdjuntos();
+
+function downloadAdjunto(adjId){
+  if(!currentId) return;
+  const adj = (carpetas[currentId].adjuntos||[]).find(a=>a.id===adjId);
+  if(!adj?.data) return;
+  const a = document.createElement('a');
+  a.href = adj.data;
+  a.download = adj.fileName || adj.nombre;
+  a.click();
 }
 function renderAdjuntos(){
   if(!currentId)return;
@@ -1790,13 +1792,13 @@ function renderAdjuntos(){
   const adjs=carpetas[currentId].adjuntos||[];
   const TYPE_ICON={'BL':'📦','Factura':'🧾','Packing':'📋','Proforma':'📄','Ficha técnica':'📐','Tracking':'🚢','ETA':'📅','Seguro':'🛡','Certificado origen':'🌐','Despacho':'🏛','Pago':'💳','Otro':'📎'};
   list.innerHTML=adjs.length?adjs.map(a=>`
-    <div style="display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--surf2);border:1px solid var(--brd);border-radius:6px;font-size:12px;max-width:300px;">
+    <div style="display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--surf2);border:1px solid var(--brd);border-radius:6px;font-size:12px;max-width:320px;">
       <span style="font-size:16px;">${TYPE_ICON[a.tipo]||'📎'}</span>
       <div style="flex:1;min-width:0;">
         <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escH(a.nombre)}</div>
-        <div style="font-size:10px;color:var(--tx3);">${a.tipo}${a.fecha?' · '+a.fecha:''}${a.size?' · '+a.size:''}${a.fromStorage?' · <span style="color:var(--gr);">☁ Firebase</span>':''}</div>
+        <div style="font-size:10px;color:var(--tx3);">${a.tipo}${a.fecha?' · '+a.fecha:''}${a.size?' · '+a.size:''}</div>
       </div>
-      ${a.url?`<a href="${escH(a.url)}" target="_blank" title="Abrir archivo" style="color:var(--gr);font-size:11px;text-decoration:none;white-space:nowrap;padding:2px 6px;border:1px solid var(--gr);border-radius:4px;">🔗 Ver</a>`:''}
+      ${a.data?`<button onclick="downloadAdjunto(${a.id})" title="Descargar" style="color:var(--gr);font-size:11px;background:none;border:1px solid var(--gr);border-radius:4px;padding:2px 7px;cursor:pointer;">⬇ Ver</button>`:(a.url?`<a href="${escH(a.url)}" target="_blank" style="color:var(--gr);font-size:11px;text-decoration:none;padding:2px 7px;border:1px solid var(--gr);border-radius:4px;">🔗 Ver</a>`:'')}
       <button onclick="delAdjunto(${a.id})" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:16px;padding:0 2px;line-height:1;" title="Eliminar">×</button>
     </div>`).join('')
   :'<span style="color:var(--tx3);font-size:12px;">Sin documentos adjuntos aún</span>';
