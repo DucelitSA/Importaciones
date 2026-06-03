@@ -36,6 +36,9 @@ try {
     snap:(q,cb)=>onSnapshot(q,cb),
     q:(c)=>query(c,orderBy('updatedAt','desc')),
     getDoc, setDoc, serverTimestamp,
+    auth, storage,
+    storageRef:(path)=>storageRef(storage,path),
+    uploadBytesResumable, getDownloadURL, deleteObject,
   };
   console.log('[Aborgama] Firebase OK');
 } catch(e){ console.error('[Aborgama] Firebase error:', e); }
@@ -1709,14 +1712,14 @@ function addAdjunto(){
   btn.textContent = '⏳ Subiendo...';
   progressWrap.style.display = 'block';
 
-  const uid = auth.currentUser?.uid || 'anon';
+  const uid = window._fb.auth.currentUser?.uid || 'anon';
   let completed = 0;
   const total = adjPendingFiles.length;
 
   adjPendingFiles.forEach((file, idx) => {
     const path = `importaciones/${uid}/${currentId}/${Date.now()}_${file.name}`;
-    const fileRef = storageRef(storage, path);
-    const task = uploadBytesResumable(fileRef, file);
+    const fileRef = window._fb.storageRef(path);
+    const task = window._fb.uploadBytesResumable(fileRef, file);
 
     task.on('state_changed',
       snap => {
@@ -1731,7 +1734,7 @@ function addAdjunto(){
         progressWrap.style.display = 'none';
       },
       async () => {
-        const url = await getDownloadURL(task.snapshot.ref);
+        const url = await window._fb.getDownloadURL(task.snapshot.ref);
         const adj = {
           id: Date.now() + idx,
           tipo,
@@ -1771,7 +1774,7 @@ async function delAdjunto(adjId){
   const adj = (carpetas[currentId].adjuntos||[]).find(a=>a.id===adjId);
   // Delete from Storage if uploaded there
   if(adj?.storagePath){
-    try{ await deleteObject(storageRef(storage, adj.storagePath)); } catch(e){ console.warn('Storage delete:', e); }
+    try{ await window._fb.deleteObject(window._fb.storageRef(adj.storagePath)); } catch(e){ console.warn('Storage delete:', e); }
   }
   carpetas[currentId].adjuntos = (carpetas[currentId].adjuntos||[]).filter(a=>a.id!==adjId);
   saveCurrent(); renderAdjuntos(); toast('🗑 Eliminado');
